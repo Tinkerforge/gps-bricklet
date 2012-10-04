@@ -38,22 +38,47 @@
 #define BRICKLET_FIRMWARE_VERSION_REVISION 0
 
 #define LOGGING_LEVEL LOGGING_DEBUG
-#define DEBUG_BRICKLET 1
+#define DEBUG_BRICKLET 0
 
 #define INVOCATION_IN_BRICKLET_CODE
 
-#define BUFFER_SIZE 250
+#define BUFFER_SIZE 180
 
 typedef struct {
-	uint32_t last_irq_value;
 	char buffer[BUFFER_SIZE];
 	uint8_t buffer_used;
 	
 	uint16_t timeout_counter;
+
+	uint32_t period_coordinates;
+	uint32_t period_coordinates_counter;
+	bool period_coordinates_new;
+
+	uint32_t period_status;
+	uint32_t period_status_counter;
+	bool period_status_new;
 	
-	
-	
-	uint16_t utc, msec; // hhmmss.sss
+	bool is_configured_to_57600;
+
+	// Coordinates
+	char ns;
+	uint16_t latitude[2];
+	char ew;
+	uint16_t longitude[2];
+	uint16_t pdop;
+	uint16_t hdop;
+	uint16_t vdop;
+
+	// Status
+	uint8_t fix;
+	uint8_t satellites_view;
+	uint8_t satellites_used;
+	uint16_t speed;  // knots/100
+	uint16_t course; // degree/100
+	uint32_t date; // ddmmyy
+	uint32_t time;  // hhmmss
+	int16_t altitude;
+	int16_t altitude_accuracy;
 } BrickContext;
 
 #endif
