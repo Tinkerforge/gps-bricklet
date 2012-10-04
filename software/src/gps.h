@@ -48,9 +48,9 @@ typedef struct {
 	uint8_t type;
 	uint16_t length;
 	char ns;
-	uint16_t latitude[2];
+	uint32_t latitude;
 	char ew;
-	uint16_t longitude[2];
+	uint32_t longitude;
 	uint16_t pdop;
 	uint16_t hdop;
 	uint16_t vdop;
@@ -74,7 +74,7 @@ typedef struct {
 	uint32_t date;
 	uint32_t time;
 	int16_t altitude;
-	int16_t altitude_accuracy;
+	int16_t geoidal_separation;
 } __attribute__((__packed__)) GetStatusReturn;
 
 typedef struct {
@@ -129,9 +129,9 @@ typedef struct {
 	uint8_t type;
 	uint16_t length;
 	char ns;
-	uint16_t latitude[2];
+	uint32_t latitude;
 	char ew;
-	uint16_t longitude[2];
+	uint32_t longitude;
 	uint16_t pdop;
 	uint16_t hdop;
 	uint16_t vdop;
@@ -149,7 +149,7 @@ typedef struct {
 	uint32_t date;
 	uint32_t time;
 	int16_t altitude;
-	int16_t altitude_accuracy;
+	int16_t geoidal_separation;
 } __attribute__((__packed__)) Status;
 
 typedef struct {

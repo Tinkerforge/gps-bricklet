@@ -195,7 +195,6 @@ bool parse_buffer(void) {
 	uint8_t xor = 0;
 
 	if(c1 > 15 || c2 > 15) {
-		BC->buffer[BC->buffer_used - 2] = '\0';
 		return false;
 	}
 	
@@ -204,16 +203,14 @@ bool parse_buffer(void) {
 	}
 	
 	if(xor != c1 * 16 + c2) {
-		BC->buffer[BC->buffer_used - 2] = '\0';
 		return false;
 	}
 
-	BC->buffer[BC->buffer_used - 2] = '\0';
-//	BA->printf("%s\n\r", BC->buffer);
+	//BC->buffer[BC->buffer_used - 2] = '\0';
+	//BA->printf("%s\n\r", BC->buffer);
 
 	BC->buffer[BC->buffer_used - 5] = '\0';
-	
-	
+
 	uint8_t fields[30];
 	char *p = BC->buffer + 1;
 	uint8_t n = strsplit(p, fields, 30);
@@ -227,7 +224,7 @@ bool parse_buffer(void) {
 			parse_simple_int32dot(p + fields[9], &value1, &value2);
 			BC->altitude = value1*10 + value2;
 			parse_simple_int32dot(p + fields[11], &value1, &value2);
-			BC->altitude_accuracy = value1*10 + value2;
+			BC->geoidal_separation = value1*10 + value2;
 			BC->period_status_new = true;
 		} else if(streq(p, "GPGSA")) {
 			BC->fix = parse_simple_uint8(p + fields[2]);
@@ -254,8 +251,7 @@ bool parse_buffer(void) {
 				parse_simple_int32dot(p +  fields[3],
 				                      &value1,
 				                      &value2);
-				BC->latitude[0] = value1;
-				BC->latitude[1] = value2;
+				BC->latitude = value1*10000 + value2;
 				BC->ns = p[fields[4]];
 				if(BC->ns != 'N' && BC->ns != 'S') {
 					BC->ns = 'U';
@@ -264,19 +260,16 @@ bool parse_buffer(void) {
 				parse_simple_int32dot(p +  fields[5],
 				                      &value1,
 				                      &value2);
-				BC->longitude[0] = value1;
-				BC->longitude[1] = value2;
+				BC->longitude = value1*10000 + value2;
 				BC->ew = p[fields[6]];
 				if(BC->ew != 'E' && BC->ew != 'W') {
 					BC->ew = 'U';
 				}
 
 			} else {
-				BC->latitude[0] = 0;
-				BC->latitude[1] = 0;
+				BC->latitude = 0;
 				BC->ns = 'U';
-				BC->longitude[0] = 0;
-				BC->longitude[1] = 0;
+				BC->longitude = 0;
 				BC->ew = 'U';
 			}
 			BC->period_coordinates_new = true;
@@ -343,32 +336,25 @@ void sc16is750_init(uint8_t baud) {
 		lcr |= (1 << 1) | (1 << 0); // Word length 8 bit: LCR[1], LCR[0] = 1, 1
 		lcr &= ~(1 << 2); // 1 stop bit: LCR[2] = 0
 		lcr &= ~(1 << 3); // No parity: LCR[3] = 0
-
 		sc16is750_write_register(I2C_INTERNAL_ADDRESS_LCR, lcr);
 
 		// Configure baudrate: ((14.7456 MHz * 1000000) / 1) /
 		//                     (9600 baud * 16) = 96
 		lcr |= 1 << 7; // Divisor latch enable: LCR[7] = 1
-
 		sc16is750_write_register(I2C_INTERNAL_ADDRESS_LCR, lcr);
-
-		lcr = sc16is750_read_register(I2C_INTERNAL_ADDRESS_LCR);
 
 		sc16is750_write_register(I2C_INTERNAL_ADDRESS_DLL, baud);
 		sc16is750_write_register(I2C_INTERNAL_ADDRESS_DLH, 0);
 
+		lcr = sc16is750_read_register(I2C_INTERNAL_ADDRESS_LCR);
 		lcr &= ~(1 << 7); // Divisor latch disable: LCR[7] = 0
-
 		sc16is750_write_register(I2C_INTERNAL_ADDRESS_LCR, lcr);
 
 		// Configure FIFOs
 		uint8_t fcr = sc16is750_read_register(I2C_INTERNAL_ADDRESS_FCR);
 
 		fcr |= (1 << 0); // Enable FIFOs: FCR[0] = 1
-
 		sc16is750_write_register(I2C_INTERNAL_ADDRESS_FCR, fcr);
-
-		fcr = sc16is750_read_register(I2C_INTERNAL_ADDRESS_FCR);
 
 		BA->bricklet_deselect(BS->port - 'a');
 		BA->mutex_give(*BA->mutex_twi_bricklet);
@@ -464,7 +450,7 @@ void tick(uint8_t tick_type) {
 
 		if(reset) {
 			BC->timeout_counter = 5000;
-			sc16is750_init(16);
+			sc16is750_init(16); // 57600 baud
 			const char *str_10hz = "$PMTK220,100*2F\r\n";
 			mt3392_write_str(str_10hz);
 			BC->is_configured_to_57600 = false;
@@ -486,9 +472,9 @@ void tick(uint8_t tick_type) {
 				TYPE_COORDINATES,
 				sizeof(Coordinates),
 				BC->ns,
-				{BC->latitude[0], BC->latitude[1]},
+				BC->latitude,
 				BC->ew,
-				{BC->longitude[0], BC->longitude[1]},
+				BC->longitude,
 				BC->pdop,
 				BC->hdop,
 				BC->vdop
@@ -515,7 +501,7 @@ void tick(uint8_t tick_type) {
 				BC->date,
 				BC->time,
 				BC->altitude,
-				BC->altitude_accuracy
+				BC->geoidal_separation
 			};
 
 			BA->send_blocking_with_timeout(&status,
@@ -546,11 +532,9 @@ void get_coordinates(uint8_t com, const GetCoordinates *data) {
 	gcr.type           = data->type;
 	gcr.length         = sizeof(GetCoordinatesReturn);
 	gcr.ns             = BC->ns;
-	gcr.latitude[0]    = BC->latitude[0];
-	gcr.latitude[1]    = BC->latitude[1];
+	gcr.latitude       = BC->latitude;
 	gcr.ew             = BC->ns;
-	gcr.longitude[0]   = BC->longitude[0];
-	gcr.longitude[1]   = BC->longitude[1];
+	gcr.longitude      = BC->longitude;
 	gcr.pdop           = BC->pdop;
 	gcr.hdop           = BC->hdop;
 	gcr.vdop           = BC->vdop;
@@ -561,18 +545,18 @@ void get_coordinates(uint8_t com, const GetCoordinates *data) {
 void get_status(uint8_t com, const GetStatus *data) {
 	GetStatusReturn gsr;
 
-	gsr.stack_id          = data->stack_id;
-	gsr.type              = data->type;
-	gsr.length            = sizeof(GetStatusReturn);
-	gsr.fix               = BC->fix;
-	gsr.satellites_view   = BC->satellites_view;
-	gsr.satellites_used   = BC->satellites_used;
-	gsr.speed             = BC->speed;
-	gsr.course            = BC->course;
-	gsr.date              = BC->date;
-	gsr.time              = BC->time;
-	gsr.altitude          = BC->altitude;
-	gsr.altitude_accuracy = BC->altitude_accuracy;
+	gsr.stack_id           = data->stack_id;
+	gsr.type               = data->type;
+	gsr.length             = sizeof(GetStatusReturn);
+	gsr.fix                = BC->fix;
+	gsr.satellites_view    = BC->satellites_view;
+	gsr.satellites_used    = BC->satellites_used;
+	gsr.speed              = BC->speed;
+	gsr.course             = BC->course;
+	gsr.date               = BC->date;
+	gsr.time               = BC->time;
+	gsr.altitude           = BC->altitude;
+	gsr.geoidal_separation = BC->geoidal_separation;
 
 	BA->send_blocking_with_timeout(&gsr, sizeof(GetStatusReturn), com);
 }

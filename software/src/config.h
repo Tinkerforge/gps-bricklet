@@ -57,14 +57,14 @@ typedef struct {
 	uint32_t period_status;
 	uint32_t period_status_counter;
 	bool period_status_new;
-	
+
 	bool is_configured_to_57600;
 
 	// Coordinates
 	char ns;
-	uint16_t latitude[2];
+	uint32_t latitude;
 	char ew;
-	uint16_t longitude[2];
+	uint32_t longitude;
 	uint16_t pdop;
 	uint16_t hdop;
 	uint16_t vdop;
@@ -73,12 +73,12 @@ typedef struct {
 	uint8_t fix;
 	uint8_t satellites_view;
 	uint8_t satellites_used;
-	uint16_t speed;  // knots/100
+	uint16_t speed;  // km/h/100
 	uint16_t course; // degree/100
 	uint32_t date; // ddmmyy
 	uint32_t time;  // hhmmss
 	int16_t altitude;
-	int16_t altitude_accuracy;
+	int16_t geoidal_separation;
 } BrickContext;
 
 #endif
