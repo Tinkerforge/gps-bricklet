@@ -47,7 +47,7 @@
 typedef struct {
 	char buffer[BUFFER_SIZE];
 	uint8_t buffer_used;
-	
+
 	uint16_t timeout_counter;
 
 	uint32_t period_coordinates;
@@ -58,7 +58,7 @@ typedef struct {
 	uint32_t period_status_counter;
 	bool period_status_new;
 
-	bool is_configured_to_57600;
+	bool mt3329_configured_to_57600;
 
 	// Coordinates
 	char ns;

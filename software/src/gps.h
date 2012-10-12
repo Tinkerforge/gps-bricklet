@@ -185,11 +185,11 @@ void get_status_callback_period(uint8_t com, const GetStatusCallbackPeriod *data
 #define I2C_INTERNAL_ADDRESS_DLH 0x01
 #define I2C_INTERNAL_ADDRESS_EFR 0x02
 
-
 #define SC16IS750_LSR_DATA_IN_RECEIVER (1 << 0)
+#define SC16IS750_LSR_OVERRUN_ERROR    (1 << 1)
 
 void sc16is750_init(uint8_t baud);
-void mt3392_write_str(const char *str);
+void mt3329_write_str(const char *str);
 uint8_t sc16is750_get_address(void);
 uint8_t sc16is750_read_register(uint8_t address);
 void sc16is750_write_register(uint8_t address, uint8_t value);

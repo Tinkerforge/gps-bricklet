@@ -197,11 +197,11 @@ bool parse_buffer(void) {
 	if(c1 > 15 || c2 > 15) {
 		return false;
 	}
-	
+
 	for(uint8_t i = 1; i < BC->buffer_used - 5; i++) {
 		xor ^= BC->buffer[i];
 	}
-	
+
 	if(xor != c1 * 16 + c2) {
 		return false;
 	}
@@ -214,7 +214,7 @@ bool parse_buffer(void) {
 	uint8_t fields[30];
 	char *p = BC->buffer + 1;
 	uint8_t n = strsplit(p, fields, 30);
-	
+
 	if(n > 0) {
 		if(streq(p, "GPGGA")) {
 			BC->satellites_used = parse_simple_uint8(p + fields[7]);
@@ -228,44 +228,44 @@ bool parse_buffer(void) {
 			BC->period_status_new = true;
 		} else if(streq(p, "GPGSA")) {
 			BC->fix = parse_simple_uint8(p + fields[2]);
+
 			int32_t value1 = 0;
 			int32_t value2 = 0;
-			parse_simple_int32dot(p +  fields[15], &value1, &value2);
+
+			parse_simple_int32dot(p + fields[15], &value1, &value2);
 			BC->pdop = value1*100 + value2;
-			parse_simple_int32dot(p +  fields[16], &value1, &value2);
+			parse_simple_int32dot(p + fields[16], &value1, &value2);
 			BC->hdop = value1*100 + value2;
-			parse_simple_int32dot(p +  fields[17], &value1, &value2);
+			parse_simple_int32dot(p + fields[17], &value1, &value2);
 			BC->vdop = value1*100 + value2;
 
 			BC->period_status_new = true;
 			BC->period_coordinates_new = true;
 		} else if(streq(p, "GPRMC")) {
-			
 			const char status = p[fields[2]];
+
 			if(status == 'A') {
 				BC->time = parse_simple_int32(p + fields[1]);
 				BC->date = parse_simple_int32(p + fields[9]);
 
 				int32_t value1 = 0;
 				int32_t value2 = 0;
-				parse_simple_int32dot(p +  fields[3],
-				                      &value1,
-				                      &value2);
+
+				parse_simple_int32dot(p + fields[3], &value1, &value2);
 				BC->latitude = value1*10000 + value2;
 				BC->ns = p[fields[4]];
+
 				if(BC->ns != 'N' && BC->ns != 'S') {
 					BC->ns = 'U';
 				}
 
-				parse_simple_int32dot(p +  fields[5],
-				                      &value1,
-				                      &value2);
+				parse_simple_int32dot(p + fields[5], &value1, &value2);
 				BC->longitude = value1*10000 + value2;
 				BC->ew = p[fields[6]];
+
 				if(BC->ew != 'E' && BC->ew != 'W') {
 					BC->ew = 'U';
 				}
-
 			} else {
 				BC->latitude = 0;
 				BC->ns = 'U';
@@ -274,33 +274,36 @@ bool parse_buffer(void) {
 			}
 			BC->period_coordinates_new = true;
 		} else if(streq(p, "GPGSV")) {
-			const uint8_t message_num = parse_simple_uint8(p+fields[2]);
+			const uint8_t message_num = parse_simple_uint8(p + fields[2]);
+
 			if(message_num == 1) {
-				BC->satellites_view = parse_simple_uint8(p+fields[3]);
+				BC->satellites_view = parse_simple_uint8(p + fields[3]);
 				BC->period_status_new = true;
 			}
 		} else if(streq(p, "GPVTG")) {
 			int32_t value1 = 0;
 			int32_t value2 = 0;
-			parse_simple_int32dot(p +  fields[1], &value1, &value2);
+
+			parse_simple_int32dot(p + fields[1], &value1, &value2);
 			BC->course = value1*100 + value2;
 
-			parse_simple_int32dot(p +  fields[7], &value1, &value2);
+			parse_simple_int32dot(p + fields[7], &value1, &value2);
 			BC->speed = value1*100 + value2;
+
 			BC->period_status_new = true;
 		} else if(streq(p, "PMTK010")) {
-			if(!BC->is_configured_to_57600) {
+			if(!BC->mt3329_configured_to_57600) {
 				const char *str_57600baud = "$PMTK251,57600*2C\r\n";
-				mt3392_write_str(str_57600baud);
-				BC->is_configured_to_57600 = true;
+				mt3329_write_str(str_57600baud);
+				BC->mt3329_configured_to_57600 = true;
 			}
 		}
 	}
-	
+
 	return true;
 }
 
-void mt3392_write_str(const char *str) {
+void mt3329_write_str(const char *str) {
 	while(*str != '\0') {
 		const uint8_t lsr = sc16is750_read_register(I2C_INTERNAL_ADDRESS_LSR);
 		if(lsr & (1 << 5)) {
@@ -380,15 +383,15 @@ void constructor(void) {
 
 	BC->buffer_used = 0;
 	BC->timeout_counter = 5000;
-	BC->is_configured_to_57600 = false;
+	BC->mt3329_configured_to_57600 = false;
 
 	// GPS disable
 	mt3329_disable();
 
 	// Reset SC16IS750
 	sc16is750_reset();
-
 	sc16is750_init(96); // 9600 baud
+
 	// GPS enable
 	mt3329_enable();
 }
@@ -398,16 +401,18 @@ void destructor(void) {
 }
 
 void tick(uint8_t tick_type) {
-	bool reset = false;
-	
+	bool reconfigure = false;
+
 	if(tick_type & TICK_TASK_TYPE_CALCULATION) {
 		if(BA->mutex_take(*BA->mutex_twi_bricklet, 10)) {
 			BA->bricklet_select(BS->port - 'a');
 
 			uint8_t lsr = sc16is750_read_register(I2C_INTERNAL_ADDRESS_LSR);
 
-			if((lsr & 0x1E) != 0) {
-				reset = true;
+			if((lsr & 0x1C) != 0) {
+				reconfigure = true;
+			} else if(lsr & SC16IS750_LSR_OVERRUN_ERROR) {
+				BC->buffer_used = 0;
 			} else if(lsr & SC16IS750_LSR_DATA_IN_RECEIVER) {
 				uint8_t rxlvl = sc16is750_read_register(I2C_INTERNAL_ADDRESS_RXLVL);
 
@@ -442,27 +447,29 @@ void tick(uint8_t tick_type) {
 
 		if(BC->timeout_counter != 0) {
 			--BC->timeout_counter;
-			
+
 			if(BC->timeout_counter == 0) {
-				reset = true;
+				reconfigure = true;
 			}
 		}
 
-		if(reset) {
+		if(reconfigure) {
 			BC->timeout_counter = 5000;
 			sc16is750_init(16); // 57600 baud
 			const char *str_10hz = "$PMTK220,100*2F\r\n";
-			mt3392_write_str(str_10hz);
-			BC->is_configured_to_57600 = false;
+			mt3329_write_str(str_10hz);
+			BC->mt3329_configured_to_57600 = false;
 		}
 
 		if(BC->period_coordinates_counter > 0) {
 			BC->period_coordinates_counter--;
 		}
+
 		if(BC->period_status_counter > 0) {
 			BC->period_status_counter--;
 		}
 	}
+
 	if(tick_type & TICK_TASK_TYPE_MESSAGE) {
 		if(BC->period_coordinates != 0 &&
 		   BC->period_coordinates_new &&
