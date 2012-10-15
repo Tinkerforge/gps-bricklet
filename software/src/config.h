@@ -42,13 +42,34 @@
 
 #define INVOCATION_IN_BRICKLET_CODE
 
-#define BUFFER_SIZE 180
+typedef struct {
+	uint8_t preamble[2];
+	uint32_t time;
+	uint32_t date;
+	uint32_t latitude;
+	uint8_t ns;
+	uint32_t longitude;
+	uint8_t ew;
+	uint8_t fix_type;
+	uint8_t fix_mode;
+	uint32_t altitude;
+	uint32_t geoidal_separation;
+	uint32_t course;
+	uint32_t speed;
+	uint8_t satellites_view;
+	uint8_t satellites_used;
+	uint16_t pdop;
+	uint16_t hdop;
+	uint16_t vdop;
+	uint16_t epe;
+	uint8_t asterisk;
+	uint8_t checksum;
+	uint8_t end[2];
+} __attribute__((packed)) BinarySentence;
 
 typedef struct {
-	char buffer[BUFFER_SIZE];
+	BinarySentence buffer;
 	uint8_t buffer_used;
-
-	uint16_t timeout_counter;
 
 	uint32_t period_coordinates;
 	uint32_t period_coordinates_counter;
@@ -58,27 +79,17 @@ typedef struct {
 	uint32_t period_status_counter;
 	bool period_status_new;
 
-	bool mt3329_configured_to_57600;
+	uint32_t period_altitude;
+	uint32_t period_altitude_counter;
+	bool period_altitude_new;
 
-	// Coordinates
-	char ns;
-	uint32_t latitude;
-	char ew;
-	uint32_t longitude;
-	uint16_t pdop;
-	uint16_t hdop;
-	uint16_t vdop;
+	uint32_t period_motion;
+	uint32_t period_motion_counter;
+	bool period_motion_new;
 
-	// Status
-	uint8_t fix;
-	uint8_t satellites_view;
-	uint8_t satellites_used;
-	uint16_t speed;  // km/h/100
-	uint16_t course; // degree/100
-	uint32_t date; // ddmmyy
-	uint32_t time;  // hhmmss
-	int16_t altitude;
-	int16_t geoidal_separation;
+	uint32_t period_date_time;
+	uint32_t period_date_time_counter;
+	bool period_date_time_new;
 } BrickContext;
 
 #endif

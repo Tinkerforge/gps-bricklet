@@ -37,6 +37,7 @@ uint8_t sc16is750_get_address(void) {
 
 uint8_t sc16is750_read_register(uint8_t address) {
 	uint8_t value = 0;
+
 	BA->TWID_Read(BA->twid,
 	              sc16is750_get_address(),
 	              address << 3,
@@ -58,247 +59,85 @@ void sc16is750_write_register(uint8_t address, uint8_t value) {
 	               NULL);
 }
 
-uint8_t hex_to_int(char hex) {
-	if(hex >= '0' && hex <= '9') {
-		return hex - '0';
-	}
+uint16_t swap_uint16(uint16_t value) {
+	uint16_t result;
 
-	if(hex >= 'A' && hex <= 'F') {
-		return 10 + (hex - 'A');
-	}
+	((uint8_t *)&result)[0] = ((uint8_t *)&value)[1];
+	((uint8_t *)&result)[1] = ((uint8_t *)&value)[0];
 
-	return 255;
+	return result;
 }
 
-bool streq(const char *s1, const char *s2) {
-	if(s1 == s2) {
-		return true;
-	}
+uint32_t swap_uint32(uint32_t value) {
+	uint32_t result;
 
-	while(*s1 == *s2 && *s1 != '\0' && *s2 != '\0') {
-		++s1;
-		++s2;
-	}
+	((uint8_t *)&result)[0] = ((uint8_t *)&value)[3];
+	((uint8_t *)&result)[1] = ((uint8_t *)&value)[2];
+	((uint8_t *)&result)[2] = ((uint8_t *)&value)[1];
+	((uint8_t *)&result)[3] = ((uint8_t *)&value)[0];
 
-	return *s1 == *s2;
-}
-
-char *strtoi(char *s, int32_t *i) {
-	int32_t sign = 1;
-
-	if(*s == '-') {
-		sign = -1;
-		++s;
-	} else if(*s == '+') {
-		++s;
-	}
-
-	if(*s < '0' || *s > '9') {
-		return NULL;
-	}
-
-	char *p = s;
-
-	while(*(p + 1) >= '0' && *(p + 1) <= '9') {
-		++p;
-	}
-
-	char *e = p + 1;
-	int32_t base = 1;
-	int32_t temp = 0;
-
-	while(p >= s) {
-		int32_t d = (*p - '0') * base;
-
-		if(INT32_MAX - d < temp) {
-			// overflow
-			return NULL;
-		}
-
-		temp += d;
-		base *= 10;
-		--p;
-	}
-
-	*i = sign * temp;
-
-	return e;
-}
-
-static uint8_t strsplit(char *s, uint8_t *fields, uint8_t count) {
-	uint8_t i = 0;
-	char *p = s;
-
-	if(count == 0) {
-		return 0;
-	}
-
-	fields[i++] = 0;
-
-	while(*p != '\0' && i < count) {
-		if(*p == ',') {
-			*p = '\0';
-			fields[i++] = p - s + 1;
-		}
-
-		++p;
-	}
-
-	return i;
-}
-
-int32_t parse_simple_int32(char *str) {
-	int32_t value = 0;
-	if(strtoi(str, &value) == 0) {
-		return 0;
-	}
-
-	return value;
-}
-
-void parse_simple_int32dot(char *str, int32_t *value1, int32_t *value2) {
-	char *e = strtoi(str, value1);
-	if(e != NULL) {
-		if(*e == '.') {
-			*value2 = parse_simple_int32(e+1);
-		} else {
-			*value2 = 0;
-		}
-	} else {
-		*value1 = 0;
-		*value2 = 0;
-	}
-}
-
-uint8_t parse_simple_uint8(char *str) {
-	int32_t value = 1;
-	if(strtoi(str, &value) == 0) {
-		return 0;
-	}
-
-	if(value > UINT8_MAX || value < 0) {
-		return 0;
-	}
-
-	return value;
+	return result;
 }
 
 bool parse_buffer(void) {
-	if(BC->buffer[0] != '$' ||
-	   BC->buffer[BC->buffer_used - 5] != '*') {
-	   BC->buffer[BC->buffer_used - 2] = '\0';
+	// Preamble and end
+	if(BC->buffer.preamble[0] != 0x04 ||
+	   BC->buffer.preamble[1] != '$' ||
+	   BC->buffer.asterisk != '*' ||
+	   BC->buffer.end[0] != '\r' ||
+	   BC->buffer.end[1] != '\n') {
 		return false;
 	}
 
-	const uint8_t c1 = hex_to_int(BC->buffer[BC->buffer_used - 4]);
-	const uint8_t c2 = hex_to_int(BC->buffer[BC->buffer_used - 3]);
+	// Checksum
 	uint8_t xor = 0;
 
-	if(c1 > 15 || c2 > 15) {
+	for(uint8_t *p = ((uint8_t *)&BC->buffer) + offsetof(BinarySentence, time);
+	    p < ((uint8_t *)&BC->buffer) + offsetof(BinarySentence, asterisk); p++) {
+		xor ^= *p;
+	}
+
+	if(xor != BC->buffer.checksum) {
 		return false;
 	}
 
-	for(uint8_t i = 1; i < BC->buffer_used - 5; i++) {
-		xor ^= BC->buffer[i];
-	}
-
-	if(xor != c1 * 16 + c2) {
+	// Validate
+	if(BC->buffer.ns != 1 && BC->buffer.ns != 2) {
 		return false;
 	}
 
-	//BC->buffer[BC->buffer_used - 2] = '\0';
-	//BA->printf("%s\n\r", BC->buffer);
-
-	BC->buffer[BC->buffer_used - 5] = '\0';
-
-	uint8_t fields[30];
-	char *p = BC->buffer + 1;
-	uint8_t n = strsplit(p, fields, 30);
-
-	if(n > 0) {
-		if(streq(p, "GPGGA")) {
-			BC->satellites_used = parse_simple_uint8(p + fields[7]);
-
-			int32_t value1 = 0;
-			int32_t value2 = 0;
-			parse_simple_int32dot(p + fields[9], &value1, &value2);
-			BC->altitude = value1*10 + value2;
-			parse_simple_int32dot(p + fields[11], &value1, &value2);
-			BC->geoidal_separation = value1*10 + value2;
-			BC->period_status_new = true;
-		} else if(streq(p, "GPGSA")) {
-			BC->fix = parse_simple_uint8(p + fields[2]);
-
-			int32_t value1 = 0;
-			int32_t value2 = 0;
-
-			parse_simple_int32dot(p + fields[15], &value1, &value2);
-			BC->pdop = value1*100 + value2;
-			parse_simple_int32dot(p + fields[16], &value1, &value2);
-			BC->hdop = value1*100 + value2;
-			parse_simple_int32dot(p + fields[17], &value1, &value2);
-			BC->vdop = value1*100 + value2;
-
-			BC->period_status_new = true;
-			BC->period_coordinates_new = true;
-		} else if(streq(p, "GPRMC")) {
-			const char status = p[fields[2]];
-
-			if(status == 'A') {
-				BC->time = parse_simple_int32(p + fields[1]);
-				BC->date = parse_simple_int32(p + fields[9]);
-
-				int32_t value1 = 0;
-				int32_t value2 = 0;
-
-				parse_simple_int32dot(p + fields[3], &value1, &value2);
-				BC->latitude = value1*10000 + value2;
-				BC->ns = p[fields[4]];
-
-				if(BC->ns != 'N' && BC->ns != 'S') {
-					BC->ns = 'U';
-				}
-
-				parse_simple_int32dot(p + fields[5], &value1, &value2);
-				BC->longitude = value1*10000 + value2;
-				BC->ew = p[fields[6]];
-
-				if(BC->ew != 'E' && BC->ew != 'W') {
-					BC->ew = 'U';
-				}
-			} else {
-				BC->latitude = 0;
-				BC->ns = 'U';
-				BC->longitude = 0;
-				BC->ew = 'U';
-			}
-			BC->period_coordinates_new = true;
-		} else if(streq(p, "GPGSV")) {
-			const uint8_t message_num = parse_simple_uint8(p + fields[2]);
-
-			if(message_num == 1) {
-				BC->satellites_view = parse_simple_uint8(p + fields[3]);
-				BC->period_status_new = true;
-			}
-		} else if(streq(p, "GPVTG")) {
-			int32_t value1 = 0;
-			int32_t value2 = 0;
-
-			parse_simple_int32dot(p + fields[1], &value1, &value2);
-			BC->course = value1*100 + value2;
-
-			parse_simple_int32dot(p + fields[7], &value1, &value2);
-			BC->speed = value1*100 + value2;
-
-			BC->period_status_new = true;
-		} else if(streq(p, "PMTK010")) {
-			if(!BC->mt3329_configured_to_57600) {
-				const char *str_57600baud = "$PMTK251,57600*2C\r\n";
-				mt3329_write_str(str_57600baud);
-				BC->mt3329_configured_to_57600 = true;
-			}
-		}
+	if(BC->buffer.ew != 1 && BC->buffer.ew != 2) {
+		return false;
 	}
+
+	if(BC->buffer.fix_type != 1 &&
+	   BC->buffer.fix_type != 2 &&
+	   BC->buffer.fix_type != 3) {
+		return false;
+	}
+
+	if(BC->buffer.fix_mode != 1 &&
+	   BC->buffer.fix_mode != 2 &&
+	   BC->buffer.fix_mode != 3) {
+		return false;
+	}
+
+	// Big to little endian
+	BC->buffer.time               = swap_uint32(BC->buffer.time);
+	BC->buffer.date               = swap_uint32(BC->buffer.date);
+	BC->buffer.latitude           = swap_uint32(BC->buffer.latitude);
+	BC->buffer.longitude          = swap_uint32(BC->buffer.longitude);
+	BC->buffer.altitude           = swap_uint32(BC->buffer.altitude);
+	BC->buffer.geoidal_separation = swap_uint16(BC->buffer.geoidal_separation);
+	BC->buffer.course             = swap_uint32(BC->buffer.course);
+	BC->buffer.speed              = swap_uint32(BC->buffer.speed);
+	BC->buffer.pdop               = swap_uint16(BC->buffer.pdop);
+	BC->buffer.hdop               = swap_uint16(BC->buffer.hdop);
+	BC->buffer.vdop               = swap_uint16(BC->buffer.vdop);
+	BC->buffer.epe                = swap_uint16(BC->buffer.epe);
+
+	BC->period_coordinates_new = true;
+	BC->period_status_new = true;
 
 	return true;
 }
@@ -314,22 +153,29 @@ void mt3329_write_str(const char *str) {
 }
 
 void mt3329_disable(void) {
-	BS->pin2_da.pio->PIO_CODR = BS->pin2_da.mask;
+	BS->pin2_da.type = PIO_OUTPUT_0;
+	BA->PIO_Configure(&BS->pin2_da, 1);
 	SLEEP_MS(1);
 }
 
 void mt3329_enable(void) {
-	BS->pin2_da.pio->PIO_SODR = BS->pin2_da.mask;
+	BS->pin2_da.type = PIO_OUTPUT_1;
+	BA->PIO_Configure(&BS->pin2_da, 1);
 }
 
 void sc16is750_reset(void) {
-	BS->pin3_pwm.pio->PIO_CODR = BS->pin3_pwm.mask;
+	BS->pin3_pwm.type = PIO_OUTPUT_0;
+	BA->PIO_Configure(&BS->pin3_pwm, 1);
+
 	SLEEP_MS(5);
-	BS->pin3_pwm.pio->PIO_SODR = BS->pin3_pwm.mask;
+
+	BS->pin3_pwm.type = PIO_OUTPUT_0;
+	BA->PIO_Configure(&BS->pin3_pwm, 1);
+
 	SLEEP_MS(500); // Wait for SC16IS750 initialization and clock stabilization
 }
 
-void sc16is750_init(uint8_t baud) {
+void sc16is750_init(void) {
 	if(BA->mutex_take(*BA->mutex_twi_bricklet, 10)) {
 		BA->bricklet_select(BS->port - 'a');
 
@@ -342,11 +188,11 @@ void sc16is750_init(uint8_t baud) {
 		sc16is750_write_register(I2C_INTERNAL_ADDRESS_LCR, lcr);
 
 		// Configure baudrate: ((14.7456 MHz * 1000000) / 1) /
-		//                     (9600 baud * 16) = 96
+		//                     (115200 baud * 16) = 8
 		lcr |= 1 << 7; // Divisor latch enable: LCR[7] = 1
 		sc16is750_write_register(I2C_INTERNAL_ADDRESS_LCR, lcr);
 
-		sc16is750_write_register(I2C_INTERNAL_ADDRESS_DLL, baud);
+		sc16is750_write_register(I2C_INTERNAL_ADDRESS_DLL, 8);
 		sc16is750_write_register(I2C_INTERNAL_ADDRESS_DLH, 0);
 
 		lcr = sc16is750_read_register(I2C_INTERNAL_ADDRESS_LCR);
@@ -368,31 +214,32 @@ void constructor(void) {
 	_Static_assert(sizeof(BrickContext) <= BRICKLET_CONTEXT_MAX_SIZE,
 	               "BrickContext too big");
 
-	BS->pin2_da.type = PIO_OUTPUT_1;
-	BA->PIO_Configure(&BS->pin2_da, 1);
+	mt3329_disable();
+	sc16is750_reset();
 
-	BS->pin3_pwm.type = PIO_OUTPUT_1;
-	BA->PIO_Configure(&BS->pin3_pwm, 1);
+	BC->buffer_used = 0;
 
 	BC->period_coordinates = 0;
 	BC->period_coordinates_counter = 0;
 	BC->period_coordinates_new = false;
+
 	BC->period_status = 0;
 	BC->period_status_counter = 0;
 	BC->period_status_new = false;
 
-	BC->buffer_used = 0;
-	BC->timeout_counter = 5000;
-	BC->mt3329_configured_to_57600 = false;
+	BC->period_altitude = 0;
+	BC->period_altitude_counter = 0;
+	BC->period_altitude_new = false;
 
-	// GPS disable
-	mt3329_disable();
+	BC->period_motion = 0;
+	BC->period_motion_counter = 0;
+	BC->period_motion_new = false;
 
-	// Reset SC16IS750
-	sc16is750_reset();
-	sc16is750_init(96); // 9600 baud
+	BC->period_date_time = 0;
+	BC->period_date_time_counter = 0;
+	BC->period_date_time_new = false;
 
-	// GPS enable
+	sc16is750_init();
 	mt3329_enable();
 }
 
@@ -401,8 +248,6 @@ void destructor(void) {
 }
 
 void tick(uint8_t tick_type) {
-	bool reconfigure = false;
-
 	if(tick_type & TICK_TASK_TYPE_CALCULATION) {
 		if(BA->mutex_take(*BA->mutex_twi_bricklet, 10)) {
 			BA->bricklet_select(BS->port - 'a');
@@ -410,31 +255,39 @@ void tick(uint8_t tick_type) {
 			uint8_t lsr = sc16is750_read_register(I2C_INTERNAL_ADDRESS_LSR);
 
 			if((lsr & 0x1C) != 0) {
-				reconfigure = true;
+				// TODO: error handling?
+				BC->buffer_used = 0;
 			} else if(lsr & SC16IS750_LSR_OVERRUN_ERROR) {
+				// TODO: error handling?
 				BC->buffer_used = 0;
 			} else if(lsr & SC16IS750_LSR_DATA_IN_RECEIVER) {
 				uint8_t rxlvl = sc16is750_read_register(I2C_INTERNAL_ADDRESS_RXLVL);
 
 				for(uint8_t i = 0; i < rxlvl; i++) {
+					uint8_t *p = ((uint8_t *)&BC->buffer) + BC->buffer_used;
 					uint8_t rhr = sc16is750_read_register(I2C_INTERNAL_ADDRESS_RHR);
 
 					if(BC->buffer_used == 0) {
-						if(rhr == '$') {
-							BC->buffer[BC->buffer_used++] = rhr;
+						if(rhr == 0x04) {
+							*p = rhr;
+							BC->buffer_used++;
 						}
-					} else if(BC->buffer_used < BUFFER_SIZE) {
-						BC->buffer[BC->buffer_used++] = rhr;
+					} else if(BC->buffer_used == 1) {
+						if(rhr == '$') {
+							*p = rhr;
+							BC->buffer_used++;
+						} else {
+							BC->buffer_used = 0;
+						}
+					} else if(BC->buffer_used < sizeof(BinarySentence)) {
+						*p = rhr;
+						BC->buffer_used++;
 					} else {
 						BC->buffer_used = 0;
 					}
 
-					if(BC->buffer_used >= 6 &&
-					    BC->buffer[BC->buffer_used - 2] == '\r' &&
-					    BC->buffer[BC->buffer_used - 1] == '\n') {
-						if(parse_buffer()) {
-							BC->timeout_counter = 5000;
-						}
+					if(BC->buffer_used == sizeof(BinarySentence)) {
+						parse_buffer();
 
 						BC->buffer_used = 0;
 					}
@@ -445,28 +298,24 @@ void tick(uint8_t tick_type) {
 			BA->mutex_give(*BA->mutex_twi_bricklet);
 		}
 
-		if(BC->timeout_counter != 0) {
-			--BC->timeout_counter;
-
-			if(BC->timeout_counter == 0) {
-				reconfigure = true;
-			}
-		}
-
-		if(reconfigure) {
-			BC->timeout_counter = 5000;
-			sc16is750_init(16); // 57600 baud
-			const char *str_10hz = "$PMTK220,100*2F\r\n";
-			mt3329_write_str(str_10hz);
-			BC->mt3329_configured_to_57600 = false;
-		}
-
-		if(BC->period_coordinates_counter > 0) {
+		if(BC->period_coordinates_counter != 0) {
 			BC->period_coordinates_counter--;
 		}
 
-		if(BC->period_status_counter > 0) {
+		if(BC->period_status_counter != 0) {
 			BC->period_status_counter--;
+		}
+
+		if(BC->period_altitude_counter != 0) {
+			BC->period_altitude_counter--;
+		}
+
+		if(BC->period_motion_counter != 0) {
+			BC->period_motion_counter--;
+		}
+
+		if(BC->period_date_time_counter != 0) {
+			BC->period_date_time_counter--;
 		}
 	}
 
@@ -478,19 +327,22 @@ void tick(uint8_t tick_type) {
 				BS->stack_id,
 				TYPE_COORDINATES,
 				sizeof(Coordinates),
-				BC->ns,
-				BC->latitude,
-				BC->ew,
-				BC->longitude,
-				BC->pdop,
-				BC->hdop,
-				BC->vdop
+				BC->buffer.latitude,
+				BC->buffer.ns == 1 ? 'N' : 'S',
+				BC->buffer.longitude,
+				BC->buffer.ew == 1 ? 'E' : 'W',
+				BC->buffer.pdop,
+				BC->buffer.hdop,
+				BC->buffer.vdop,
+				BC->buffer.epe
 			};
 
 			BA->send_blocking_with_timeout(&coordinates,
 			                               sizeof(Coordinates),
 			                               *BA->com_current);
+
 			BC->period_coordinates_counter = BC->period_coordinates;
+			BC->period_coordinates_new = false;
 		}
 
 		if(BC->period_status != 0 &&
@@ -500,15 +352,9 @@ void tick(uint8_t tick_type) {
 				BS->stack_id,
 				TYPE_STATUS,
 				sizeof(Status),
-				BC->fix,
-				BC->satellites_view,
-				BC->satellites_used,
-				BC->speed,
-				BC->course,
-				BC->date,
-				BC->time,
-				BC->altitude,
-				BC->geoidal_separation
+				BC->buffer.fix_type,
+				BC->buffer.satellites_view,
+				BC->buffer.satellites_used
 			};
 
 			BA->send_blocking_with_timeout(&status,
@@ -516,19 +362,86 @@ void tick(uint8_t tick_type) {
 			                               *BA->com_current);
 
 			BC->period_status_counter = BC->period_status;
+			BC->period_status_new = false;
+		}
+
+		if(BC->period_altitude != 0 &&
+		   BC->period_altitude_new &&
+		   BC->period_altitude_counter == 0) {
+			Altitude altitude = {
+				BS->stack_id,
+				TYPE_ALTITUDE,
+				sizeof(Altitude),
+				BC->buffer.altitude,
+				BC->buffer.geoidal_separation
+			};
+
+			BA->send_blocking_with_timeout(&altitude,
+			                               sizeof(Altitude),
+			                               *BA->com_current);
+
+			BC->period_altitude_counter = BC->period_altitude;
+			BC->period_altitude_new = false;
+		}
+
+		if(BC->period_motion != 0 &&
+		   BC->period_motion_new &&
+		   BC->period_motion_counter == 0) {
+			Motion motion = {
+				BS->stack_id,
+				TYPE_MOTION,
+				sizeof(Motion),
+				BC->buffer.course,
+				BC->buffer.speed
+			};
+
+			BA->send_blocking_with_timeout(&motion,
+			                               sizeof(Motion),
+			                               *BA->com_current);
+
+			BC->period_motion_counter = BC->period_motion;
+			BC->period_motion_new = false;
+		}
+
+		if(BC->period_date_time != 0 &&
+		   BC->period_date_time_new &&
+		   BC->period_date_time_counter == 0) {
+			DateTime date_time = {
+				BS->stack_id,
+				TYPE_DATE_TIME,
+				sizeof(DateTime),
+				BC->buffer.date,
+				BC->buffer.time
+			};
+
+			BA->send_blocking_with_timeout(&date_time,
+			                               sizeof(DateTime),
+			                               *BA->com_current);
+
+			BC->period_date_time_counter = BC->period_date_time;
+			BC->period_date_time_new = false;
 		}
 	}
 }
 
 void invocation(uint8_t com, uint8_t *data) {
 	switch(((StandardMessage*)data)->type) {
-		case 1: get_coordinates(com, (GetCoordinates*)data); break;
-		case 2: get_status(com, (GetStatus*)data); break;
-		case 3: restart(com, (Restart*)data); break;
-		case 4: set_coordinates_callback_period(com, (SetCoordinatesCallbackPeriod*)data); break;
-		case 5: get_coordinates_callback_period(com, (GetCoordinatesCallbackPeriod*)data); break;
-		case 6: set_status_callback_period(com, (SetStatusCallbackPeriod*)data); break;
-		case 7: get_status_callback_period(com, (GetStatusCallbackPeriod*)data); break;
+		case TYPE_GET_COORDINATES:                 get_coordinates(com, (GetCoordinates*)data); break;
+		case TYPE_GET_STATUS:                      get_status(com, (GetStatus*)data); break;
+		case TYPE_GET_ALTITUDE:                    get_altitude(com, (GetAltitude*)data); break;
+		case TYPE_GET_MOTION:                      get_motion(com, (GetMotion*)data); break;
+		case TYPE_GET_DATE_TIME:                   get_date_time(com, (GetDateTime*)data); break;
+		case TYPE_RESTART:                         restart(com, (Restart*)data); break;
+		case TYPE_SET_COORDINATES_CALLBACK_PERIOD: set_coordinates_callback_period(com, (SetCoordinatesCallbackPeriod*)data); break;
+		case TYPE_GET_COORDINATES_CALLBACK_PERIOD: get_coordinates_callback_period(com, (GetCoordinatesCallbackPeriod*)data); break;
+		case TYPE_SET_STATUS_CALLBACK_PERIOD:      set_status_callback_period(com, (SetStatusCallbackPeriod*)data); break;
+		case TYPE_GET_STATUS_CALLBACK_PERIOD:      get_status_callback_period(com, (GetStatusCallbackPeriod*)data); break;
+		case TYPE_SET_ALTITUDE_CALLBACK_PERIOD:    set_altitude_callback_period(com, (SetAltitudeCallbackPeriod*)data); break;
+		case TYPE_GET_ALTITUDE_CALLBACK_PERIOD:    get_altitude_callback_period(com, (GetAltitudeCallbackPeriod*)data); break;
+		case TYPE_SET_MOTION_CALLBACK_PERIOD:      set_motion_callback_period(com, (SetMotionCallbackPeriod*)data); break;
+		case TYPE_GET_MOTION_CALLBACK_PERIOD:      get_motion_callback_period(com, (GetMotionCallbackPeriod*)data); break;
+		case TYPE_SET_DATE_TIME_CALLBACK_PERIOD:   set_date_time_callback_period(com, (SetDateTimeCallbackPeriod*)data); break;
+		case TYPE_GET_DATE_TIME_CALLBACK_PERIOD:   get_date_time_callback_period(com, (GetDateTimeCallbackPeriod*)data); break;
 	}
 }
 
@@ -538,13 +451,14 @@ void get_coordinates(uint8_t com, const GetCoordinates *data) {
 	gcr.stack_id       = data->stack_id;
 	gcr.type           = data->type;
 	gcr.length         = sizeof(GetCoordinatesReturn);
-	gcr.ns             = BC->ns;
-	gcr.latitude       = BC->latitude;
-	gcr.ew             = BC->ns;
-	gcr.longitude      = BC->longitude;
-	gcr.pdop           = BC->pdop;
-	gcr.hdop           = BC->hdop;
-	gcr.vdop           = BC->vdop;
+	gcr.latitude       = BC->buffer.latitude;
+	gcr.ns             = BC->buffer.ns == 1 ? 'N' : 'S';
+	gcr.longitude      = BC->buffer.longitude;
+	gcr.ew             = BC->buffer.ew == 1 ? 'E' : 'W';
+	gcr.pdop           = BC->buffer.pdop;
+	gcr.hdop           = BC->buffer.hdop;
+	gcr.vdop           = BC->buffer.vdop;
+	gcr.epe            = BC->buffer.epe;
 
 	BA->send_blocking_with_timeout(&gcr, sizeof(GetCoordinatesReturn), com);
 }
@@ -555,17 +469,47 @@ void get_status(uint8_t com, const GetStatus *data) {
 	gsr.stack_id           = data->stack_id;
 	gsr.type               = data->type;
 	gsr.length             = sizeof(GetStatusReturn);
-	gsr.fix                = BC->fix;
-	gsr.satellites_view    = BC->satellites_view;
-	gsr.satellites_used    = BC->satellites_used;
-	gsr.speed              = BC->speed;
-	gsr.course             = BC->course;
-	gsr.date               = BC->date;
-	gsr.time               = BC->time;
-	gsr.altitude           = BC->altitude;
-	gsr.geoidal_separation = BC->geoidal_separation;
+	gsr.fix                = BC->buffer.fix_type;
+	gsr.satellites_view    = BC->buffer.satellites_view;
+	gsr.satellites_used    = BC->buffer.satellites_used;
 
 	BA->send_blocking_with_timeout(&gsr, sizeof(GetStatusReturn), com);
+}
+
+void get_altitude(uint8_t com, const GetAltitude *data) {
+	GetAltitudeReturn gar;
+
+	gar.stack_id           = data->stack_id;
+	gar.type               = data->type;
+	gar.length             = sizeof(GetAltitudeReturn);
+	gar.altitude           = BC->buffer.altitude;
+	gar.geoidal_separation = BC->buffer.geoidal_separation;
+
+	BA->send_blocking_with_timeout(&gar, sizeof(GetAltitudeReturn), com);
+}
+
+void get_motion(uint8_t com, const GetMotion *data) {
+	GetMotionReturn gmr;
+
+	gmr.stack_id           = data->stack_id;
+	gmr.type               = data->type;
+	gmr.length             = sizeof(GetMotionReturn);
+	gmr.course             = BC->buffer.course;
+	gmr.speed              = BC->buffer.speed;
+
+	BA->send_blocking_with_timeout(&gmr, sizeof(GetMotionReturn), com);
+}
+
+void get_date_time(uint8_t com, const GetDateTime *data) {
+	GetDateTimeReturn gdtr;
+
+	gdtr.stack_id           = data->stack_id;
+	gdtr.type               = data->type;
+	gdtr.length             = sizeof(GetDateTimeReturn);
+	gdtr.date               = BC->buffer.date;
+	gdtr.time               = BC->buffer.time;
+
+	BA->send_blocking_with_timeout(&gdtr, sizeof(GetDateTimeReturn), com);
 }
 
 void restart(uint8_t com, const Restart *data) {
@@ -578,12 +522,12 @@ void restart(uint8_t com, const Restart *data) {
 
 		const char last_digit[4] = {'2', '1', '0', '7'};
 		char *str = "$PMTK101*30\r\n";
-		str[8] += data->restart_type;
+		str[8] += data->restart_type; // FIXME: is this safe, as in does this do a copy?
 		str[10] = last_digit[data->restart_type];
 
 		while(*str != '\0') {
 			const uint8_t lsr = sc16is750_read_register(I2C_INTERNAL_ADDRESS_LSR);
-			if(lsr & (1 << 5)) {
+			if(lsr & SC16IS750_LSR_THR_IS_EMPTY) {
 				sc16is750_write_register(I2C_INTERNAL_ADDRESS_THR, *str);
 				str++;
 			}
@@ -625,5 +569,56 @@ void get_status_callback_period(uint8_t com, const GetStatusCallbackPeriod *data
 
 	BA->send_blocking_with_timeout(&gscpr,
 	                               sizeof(GetStatusCallbackPeriodReturn),
+	                               com);
+}
+
+void set_altitude_callback_period(uint8_t com, const SetAltitudeCallbackPeriod *data) {
+	BC->period_altitude = data->period;
+}
+
+void get_altitude_callback_period(uint8_t com, const GetAltitudeCallbackPeriod *data) {
+	GetAltitudeCallbackPeriodReturn gacpr;
+
+	gacpr.stack_id       = data->stack_id;
+	gacpr.type           = data->type;
+	gacpr.length         = sizeof(GetAltitudeCallbackPeriodReturn);
+	gacpr.period         = BC->period_altitude;
+
+	BA->send_blocking_with_timeout(&gacpr,
+	                               sizeof(GetAltitudeCallbackPeriodReturn),
+	                               com);
+}
+
+void set_motion_callback_period(uint8_t com, const SetMotionCallbackPeriod *data) {
+	BC->period_motion = data->period;
+}
+
+void get_motion_callback_period(uint8_t com, const GetMotionCallbackPeriod *data) {
+	GetMotionCallbackPeriodReturn gmcpr;
+
+	gmcpr.stack_id       = data->stack_id;
+	gmcpr.type           = data->type;
+	gmcpr.length         = sizeof(GetMotionCallbackPeriodReturn);
+	gmcpr.period         = BC->period_motion;
+
+	BA->send_blocking_with_timeout(&gmcpr,
+	                               sizeof(GetMotionCallbackPeriodReturn),
+	                               com);
+}
+
+void set_date_time_callback_period(uint8_t com, const SetDateTimeCallbackPeriod *data) {
+	BC->period_date_time = data->period;
+}
+
+void get_date_time_callback_period(uint8_t com, const GetDateTimeCallbackPeriod *data) {
+	GetDateTimeCallbackPeriodReturn gdtcpr;
+
+	gdtcpr.stack_id       = data->stack_id;
+	gdtcpr.type           = data->type;
+	gdtcpr.length         = sizeof(GetDateTimeCallbackPeriodReturn);
+	gdtcpr.period         = BC->period_date_time;
+
+	BA->send_blocking_with_timeout(&gdtcpr,
+	                               sizeof(GetDateTimeCallbackPeriodReturn),
 	                               com);
 }
