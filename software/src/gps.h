@@ -321,21 +321,21 @@ void get_date_time_callback_period(uint8_t com, const GetDateTimeCallbackPeriod 
 #define I2C_INTERNAL_ADDRESS_DLH 0x01
 #define I2C_INTERNAL_ADDRESS_EFR 0x02
 
-#define SC16IS750_LSR_DATA_IN_RECEIVER (1 << 0)
-#define SC16IS750_LSR_OVERRUN_ERROR    (1 << 1)
-#define SC16IS750_LSR_THR_IS_EMPTY     (1 << 5)
+#define SC16IS740_LSR_DATA_IN_RECEIVER (1 << 0)
+#define SC16IS740_LSR_OVERRUN_ERROR    (1 << 1)
+#define SC16IS740_LSR_THR_IS_EMPTY     (1 << 5)
 
-void sc16is750_init(void);
-void mt3329_write_str(const char *str);
-uint8_t sc16is750_get_address(void);
-uint8_t sc16is750_read_register(uint8_t address);
-void sc16is750_write_register(uint8_t address, uint8_t value);
+void sc16is740_init(void);
+void mt3339_write_str(const char *str);
+uint8_t sc16is740_get_address(void);
+uint8_t sc16is740_read_register(uint8_t address);
+void sc16is740_write_register(uint8_t address, uint8_t value);
 uint16_t swap_uint16(uint16_t value);
 uint32_t swap_uint32(uint32_t value);
 bool parse_buffer(void);
 void mt3329_disable(void);
 void mt3329_enable(void);
-void sc16is750_reset(void);
+void sc16is740_reset(void);
 
 void invocation(uint8_t com, uint8_t *data);
 void constructor(void);

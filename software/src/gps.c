@@ -27,7 +27,7 @@
 #include "bricklib/utility/util_definitions.h"
 #include "config.h"
 
-uint8_t sc16is750_get_address(void) {
+uint8_t sc16is740_get_address(void) {
 	if(BS->address == I2C_EEPROM_ADDRESS_HIGH) {
 		return I2C_ADDRESS_HIGH;
 	} else {
@@ -35,11 +35,11 @@ uint8_t sc16is750_get_address(void) {
 	}
 }
 
-uint8_t sc16is750_read_register(uint8_t address) {
+uint8_t sc16is740_read_register(uint8_t address) {
 	uint8_t value = 0;
 
 	BA->TWID_Read(BA->twid,
-	              sc16is750_get_address(),
+	              sc16is740_get_address(),
 	              address << 3,
 	              1,
 	              &value,
@@ -49,9 +49,9 @@ uint8_t sc16is750_read_register(uint8_t address) {
 	return value;
 }
 
-void sc16is750_write_register(uint8_t address, uint8_t value) {
+void sc16is740_write_register(uint8_t address, uint8_t value) {
 	BA->TWID_Write(BA->twid,
-	               sc16is750_get_address(),
+	               sc16is740_get_address(),
 	               address << 3,
 	               1,
 	               &value,
@@ -142,28 +142,28 @@ bool parse_buffer(void) {
 	return true;
 }
 
-void mt3329_write_str(const char *str) {
+void mt3339_write_str(const char *str) {
 	while(*str != '\0') {
-		const uint8_t lsr = sc16is750_read_register(I2C_INTERNAL_ADDRESS_LSR);
+		const uint8_t lsr = sc16is740_read_register(I2C_INTERNAL_ADDRESS_LSR);
 		if(lsr & (1 << 5)) {
-			sc16is750_write_register(I2C_INTERNAL_ADDRESS_THR, *str);
+			sc16is740_write_register(I2C_INTERNAL_ADDRESS_THR, *str);
 			str++;
 		}
 	}
 }
 
-void mt3329_disable(void) {
+void mt3339_disable(void) {
 	BS->pin2_da.type = PIO_OUTPUT_0;
 	BA->PIO_Configure(&BS->pin2_da, 1);
 	SLEEP_MS(1);
 }
 
-void mt3329_enable(void) {
+void mt3339_enable(void) {
 	BS->pin2_da.type = PIO_OUTPUT_1;
 	BA->PIO_Configure(&BS->pin2_da, 1);
 }
 
-void sc16is750_reset(void) {
+void sc16is740_reset(void) {
 	BS->pin3_pwm.type = PIO_OUTPUT_0;
 	BA->PIO_Configure(&BS->pin3_pwm, 1);
 
@@ -172,38 +172,38 @@ void sc16is750_reset(void) {
 	BS->pin3_pwm.type = PIO_OUTPUT_0;
 	BA->PIO_Configure(&BS->pin3_pwm, 1);
 
-	SLEEP_MS(500); // Wait for SC16IS750 initialization and clock stabilization
+	SLEEP_MS(100); // Wait for SC16IS740 initialization and clock stabilization
 }
 
-void sc16is750_init(void) {
+void sc16is740_init(void) {
 	if(BA->mutex_take(*BA->mutex_twi_bricklet, 10)) {
 		BA->bricklet_select(BS->port - 'a');
 
 		// Configure UART
-		uint8_t lcr = sc16is750_read_register(I2C_INTERNAL_ADDRESS_LCR);
+		uint8_t lcr = sc16is740_read_register(I2C_INTERNAL_ADDRESS_LCR);
 
 		lcr |= (1 << 1) | (1 << 0); // Word length 8 bit: LCR[1], LCR[0] = 1, 1
 		lcr &= ~(1 << 2); // 1 stop bit: LCR[2] = 0
 		lcr &= ~(1 << 3); // No parity: LCR[3] = 0
-		sc16is750_write_register(I2C_INTERNAL_ADDRESS_LCR, lcr);
+		sc16is740_write_register(I2C_INTERNAL_ADDRESS_LCR, lcr);
 
 		// Configure baudrate: ((14.7456 MHz * 1000000) / 1) /
 		//                     (115200 baud * 16) = 8
 		lcr |= 1 << 7; // Divisor latch enable: LCR[7] = 1
-		sc16is750_write_register(I2C_INTERNAL_ADDRESS_LCR, lcr);
+		sc16is740_write_register(I2C_INTERNAL_ADDRESS_LCR, lcr);
 
-		sc16is750_write_register(I2C_INTERNAL_ADDRESS_DLL, 8);
-		sc16is750_write_register(I2C_INTERNAL_ADDRESS_DLH, 0);
+		sc16is740_write_register(I2C_INTERNAL_ADDRESS_DLL, 8);
+		sc16is740_write_register(I2C_INTERNAL_ADDRESS_DLH, 0);
 
-		lcr = sc16is750_read_register(I2C_INTERNAL_ADDRESS_LCR);
+		lcr = sc16is740_read_register(I2C_INTERNAL_ADDRESS_LCR);
 		lcr &= ~(1 << 7); // Divisor latch disable: LCR[7] = 0
-		sc16is750_write_register(I2C_INTERNAL_ADDRESS_LCR, lcr);
+		sc16is740_write_register(I2C_INTERNAL_ADDRESS_LCR, lcr);
 
 		// Configure FIFOs
-		uint8_t fcr = sc16is750_read_register(I2C_INTERNAL_ADDRESS_FCR);
+		uint8_t fcr = sc16is740_read_register(I2C_INTERNAL_ADDRESS_FCR);
 
 		fcr |= (1 << 0); // Enable FIFOs: FCR[0] = 1
-		sc16is750_write_register(I2C_INTERNAL_ADDRESS_FCR, fcr);
+		sc16is740_write_register(I2C_INTERNAL_ADDRESS_FCR, fcr);
 
 		BA->bricklet_deselect(BS->port - 'a');
 		BA->mutex_give(*BA->mutex_twi_bricklet);
@@ -214,8 +214,8 @@ void constructor(void) {
 	_Static_assert(sizeof(BrickContext) <= BRICKLET_CONTEXT_MAX_SIZE,
 	               "BrickContext too big");
 
-	mt3329_disable();
-	sc16is750_reset();
+	mt3339_disable();
+	sc16is740_reset();
 
 	BC->buffer_used = 0;
 
@@ -239,8 +239,8 @@ void constructor(void) {
 	BC->period_date_time_counter = 0;
 	BC->period_date_time_new = false;
 
-	sc16is750_init();
-	mt3329_enable();
+	sc16is740_init();
+	mt3339_enable();
 }
 
 void destructor(void) {
@@ -252,20 +252,20 @@ void tick(uint8_t tick_type) {
 		if(BA->mutex_take(*BA->mutex_twi_bricklet, 10)) {
 			BA->bricklet_select(BS->port - 'a');
 
-			uint8_t lsr = sc16is750_read_register(I2C_INTERNAL_ADDRESS_LSR);
+			uint8_t lsr = sc16is740_read_register(I2C_INTERNAL_ADDRESS_LSR);
 
 			if((lsr & 0x1C) != 0) {
 				// TODO: error handling?
 				BC->buffer_used = 0;
-			} else if(lsr & SC16IS750_LSR_OVERRUN_ERROR) {
+			} else if(lsr & SC16IS740_LSR_OVERRUN_ERROR) {
 				// TODO: error handling?
 				BC->buffer_used = 0;
-			} else if(lsr & SC16IS750_LSR_DATA_IN_RECEIVER) {
-				uint8_t rxlvl = sc16is750_read_register(I2C_INTERNAL_ADDRESS_RXLVL);
+			} else if(lsr & SC16IS740_LSR_DATA_IN_RECEIVER) {
+				uint8_t rxlvl = sc16is740_read_register(I2C_INTERNAL_ADDRESS_RXLVL);
 
 				for(uint8_t i = 0; i < rxlvl; i++) {
 					uint8_t *p = ((uint8_t *)&BC->buffer) + BC->buffer_used;
-					uint8_t rhr = sc16is750_read_register(I2C_INTERNAL_ADDRESS_RHR);
+					uint8_t rhr = sc16is740_read_register(I2C_INTERNAL_ADDRESS_RHR);
 
 					if(BC->buffer_used == 0) {
 						if(rhr == 0x04) {
@@ -526,9 +526,9 @@ void restart(uint8_t com, const Restart *data) {
 		str[10] = last_digit[data->restart_type];
 
 		while(*str != '\0') {
-			const uint8_t lsr = sc16is750_read_register(I2C_INTERNAL_ADDRESS_LSR);
-			if(lsr & SC16IS750_LSR_THR_IS_EMPTY) {
-				sc16is750_write_register(I2C_INTERNAL_ADDRESS_THR, *str);
+			const uint8_t lsr = sc16is740_read_register(I2C_INTERNAL_ADDRESS_LSR);
+			if(lsr & SC16IS740_LSR_THR_IS_EMPTY) {
+				sc16is740_write_register(I2C_INTERNAL_ADDRESS_THR, *str);
 				str++;
 			}
 		}
