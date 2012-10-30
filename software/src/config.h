@@ -69,7 +69,7 @@ typedef struct {
 
 typedef struct {
 	BinarySentence buffer;
-	uint8_t buffer_used;
+	bool in_sync;
 
 	uint32_t period_coordinates;
 	uint32_t period_coordinates_counter;

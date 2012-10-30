@@ -136,9 +136,6 @@ bool parse_buffer(void) {
 	BC->buffer.vdop               = swap_uint16(BC->buffer.vdop);
 	BC->buffer.epe                = swap_uint16(BC->buffer.epe);
 
-	BC->period_coordinates_new = true;
-	BC->period_status_new = true;
-
 	return true;
 }
 
@@ -169,7 +166,7 @@ void sc16is740_reset(void) {
 
 	SLEEP_MS(5);
 
-	BS->pin3_pwm.type = PIO_OUTPUT_0;
+	BS->pin3_pwm.type = PIO_OUTPUT_1;
 	BA->PIO_Configure(&BS->pin3_pwm, 1);
 
 	SLEEP_MS(100); // Wait for SC16IS740 initialization and clock stabilization
@@ -217,7 +214,7 @@ void constructor(void) {
 	mt3339_disable();
 	sc16is740_reset();
 
-	BC->buffer_used = 0;
+	BC->in_sync = false;
 
 	BC->period_coordinates = 0;
 	BC->period_coordinates_counter = 0;
@@ -244,7 +241,6 @@ void constructor(void) {
 }
 
 void destructor(void) {
-
 }
 
 void tick(uint8_t tick_type) {
@@ -256,42 +252,42 @@ void tick(uint8_t tick_type) {
 
 			if((lsr & 0x1C) != 0) {
 				// TODO: error handling?
-				BC->buffer_used = 0;
+				BC->in_sync = false;
 			} else if(lsr & SC16IS740_LSR_OVERRUN_ERROR) {
 				// TODO: error handling?
-				BC->buffer_used = 0;
+				BC->in_sync = false;
 			} else if(lsr & SC16IS740_LSR_DATA_IN_RECEIVER) {
 				uint8_t rxlvl = sc16is740_read_register(I2C_INTERNAL_ADDRESS_RXLVL);
 
-				for(uint8_t i = 0; i < rxlvl; i++) {
-					uint8_t *p = ((uint8_t *)&BC->buffer) + BC->buffer_used;
-					uint8_t rhr = sc16is740_read_register(I2C_INTERNAL_ADDRESS_RHR);
+				if(BC->in_sync) {
+					if(rxlvl >= sizeof(BinarySentence)) {
+						// read and parse all data
+						uint8_t *p = (uint8_t *)&BC->buffer;
 
-					if(BC->buffer_used == 0) {
-						if(rhr == 0x04) {
-							*p = rhr;
-							BC->buffer_used++;
+						for(uint8_t i = 0; i < sizeof(BinarySentence); i++) {
+							*p++ = sc16is740_read_register(I2C_INTERNAL_ADDRESS_RHR);
 						}
-					} else if(BC->buffer_used == 1) {
-						if(rhr == '$') {
-							*p = rhr;
-							BC->buffer_used++;
-						} else {
-							BC->buffer_used = 0;
+
+						bool result = parse_buffer();
+
+						if(!result) {
+							BC->in_sync = false;
 						}
-					} else if(BC->buffer_used < sizeof(BinarySentence)) {
-						*p = rhr;
-						BC->buffer_used++;
-					} else {
-						BC->buffer_used = 0;
+
+						BC->period_coordinates_new = result;
+						BC->period_status_new = result;
+						BC->period_altitude_new = result;
+						BC->period_motion_new = result;
+						BC->period_date_time_new = result;
 					}
-
-					if(BC->buffer_used == sizeof(BinarySentence)) {
-						parse_buffer();
-
-						BC->buffer_used = 0;
+				} else {
+					// drop all data
+					for(uint8_t i = 0; i < rxlvl; i++) {
+						sc16is740_read_register(I2C_INTERNAL_ADDRESS_RHR);
 					}
 				}
+			} else if(!BC->in_sync) {
+				BC->in_sync = true;
 			}
 
 			BA->bricklet_deselect(BS->port - 'a');
