@@ -116,9 +116,9 @@ bool parse_buffer(void) {
 		return false;
 	}
 
-	if(BC->buffer.fix_mode != 1 &&
-	   BC->buffer.fix_mode != 2 &&
-	   BC->buffer.fix_mode != 3) {
+	if(BC->buffer.fix_mode != 0 &&
+	   BC->buffer.fix_mode != 1 &&
+	   BC->buffer.fix_mode != 2) {
 		return false;
 	}
 
