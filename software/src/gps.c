@@ -128,7 +128,7 @@ bool parse_buffer(void) {
 	BC->buffer.latitude           = swap_uint32(BC->buffer.latitude);
 	BC->buffer.longitude          = swap_uint32(BC->buffer.longitude);
 	BC->buffer.altitude           = swap_uint32(BC->buffer.altitude);
-	BC->buffer.geoidal_separation = swap_uint16(BC->buffer.geoidal_separation);
+	BC->buffer.geoidal_separation = swap_uint32(BC->buffer.geoidal_separation);
 	BC->buffer.course             = swap_uint32(BC->buffer.course);
 	BC->buffer.speed              = swap_uint32(BC->buffer.speed);
 	BC->buffer.pdop               = swap_uint16(BC->buffer.pdop);
