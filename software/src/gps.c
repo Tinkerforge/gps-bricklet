@@ -35,7 +35,7 @@ uint8_t sc16is740_get_address(void) {
 	}
 }
 
-uint8_t sc16is740_read_register(uint8_t address) {
+uint8_t sc16is740_read_register(const uint8_t address) {
 	uint8_t value = 0;
 
 	BA->TWID_Read(BA->twid,
@@ -49,7 +49,7 @@ uint8_t sc16is740_read_register(uint8_t address) {
 	return value;
 }
 
-void sc16is740_write_register(uint8_t address, uint8_t value) {
+void sc16is740_write_register(const uint8_t address, uint8_t value) {
 	BA->TWID_Write(BA->twid,
 	               sc16is740_get_address(),
 	               address << 3,
@@ -59,7 +59,7 @@ void sc16is740_write_register(uint8_t address, uint8_t value) {
 	               NULL);
 }
 
-uint16_t swap_uint16(uint16_t value) {
+uint16_t swap_uint16(const uint16_t value) {
 	uint16_t result;
 
 	((uint8_t *)&result)[0] = ((uint8_t *)&value)[1];
@@ -68,7 +68,7 @@ uint16_t swap_uint16(uint16_t value) {
 	return result;
 }
 
-uint32_t swap_uint32(uint32_t value) {
+uint32_t swap_uint32(const uint32_t value) {
 	uint32_t result;
 
 	((uint8_t *)&result)[0] = ((uint8_t *)&value)[3];
@@ -243,7 +243,7 @@ void constructor(void) {
 void destructor(void) {
 }
 
-void tick(uint8_t tick_type) {
+void tick(const uint8_t tick_type) {
 	if(tick_type & TICK_TASK_TYPE_CALCULATION) {
 		if(BA->mutex_take(*BA->mutex_twi_bricklet, 10)) {
 			BA->bricklet_select(BS->port - 'a');
@@ -319,19 +319,17 @@ void tick(uint8_t tick_type) {
 		if(BC->period_coordinates != 0 &&
 		   BC->period_coordinates_new &&
 		   BC->period_coordinates_counter == 0) {
-			Coordinates coordinates = {
-				BS->stack_id,
-				TYPE_COORDINATES,
-				sizeof(Coordinates),
-				BC->buffer.latitude,
-				BC->buffer.ns == 1 ? 'N' : 'S',
-				BC->buffer.longitude,
-				BC->buffer.ew == 1 ? 'E' : 'W',
-				BC->buffer.pdop,
-				BC->buffer.hdop,
-				BC->buffer.vdop,
-				BC->buffer.epe
-			};
+			Coordinates coordinates;
+			BA->com_make_default_header(&coordinates, BS->uid, sizeof(Coordinates), FID_COORDINATES);
+
+			coordinates.latitude  = BC->buffer.latitude;
+			coordinates.ns        = BC->buffer.ns == 1 ? 'N' : 'S';
+			coordinates.longitude = BC->buffer.longitude;
+			coordinates.ew        = BC->buffer.ew == 1 ? 'E' : 'W';
+			coordinates.pdop      = BC->buffer.pdop;
+			coordinates.hdop      = BC->buffer.hdop;
+			coordinates.vdop      = BC->buffer.vdop;
+			coordinates.epe       = BC->buffer.epe;
 
 			BA->send_blocking_with_timeout(&coordinates,
 			                               sizeof(Coordinates),
@@ -344,14 +342,12 @@ void tick(uint8_t tick_type) {
 		if(BC->period_status != 0 &&
 		   BC->period_status_new &&
 		   BC->period_status_counter == 0) {
-			Status status = {
-				BS->stack_id,
-				TYPE_STATUS,
-				sizeof(Status),
-				BC->buffer.fix_type,
-				BC->buffer.satellites_view,
-				BC->buffer.satellites_used
-			};
+			Status status;
+			BA->com_make_default_header(&status, BS->uid, sizeof(Status), FID_STATUS);
+
+			status.fix             = BC->buffer.fix_type;
+			status.satellites_view = BC->buffer.satellites_view;
+			status.satellites_used = BC->buffer.satellites_used;
 
 			BA->send_blocking_with_timeout(&status,
 			                               sizeof(Status),
@@ -364,13 +360,11 @@ void tick(uint8_t tick_type) {
 		if(BC->period_altitude != 0 &&
 		   BC->period_altitude_new &&
 		   BC->period_altitude_counter == 0) {
-			Altitude altitude = {
-				BS->stack_id,
-				TYPE_ALTITUDE,
-				sizeof(Altitude),
-				BC->buffer.altitude,
-				BC->buffer.geoidal_separation
-			};
+			Altitude altitude;
+			BA->com_make_default_header(&altitude, BS->uid, sizeof(Altitude), FID_ALTITUDE);
+
+			altitude.altitude           = BC->buffer.altitude;
+			altitude.geoidal_separation = BC->buffer.geoidal_separation;
 
 			BA->send_blocking_with_timeout(&altitude,
 			                               sizeof(Altitude),
@@ -383,13 +377,11 @@ void tick(uint8_t tick_type) {
 		if(BC->period_motion != 0 &&
 		   BC->period_motion_new &&
 		   BC->period_motion_counter == 0) {
-			Motion motion = {
-				BS->stack_id,
-				TYPE_MOTION,
-				sizeof(Motion),
-				BC->buffer.course,
-				BC->buffer.speed
-			};
+			Motion motion;
+			BA->com_make_default_header(&motion, BS->uid, sizeof(Motion), FID_MOTION);
+
+			motion.course = BC->buffer.course;
+			motion.speed  = BC->buffer.speed;
 
 			BA->send_blocking_with_timeout(&motion,
 			                               sizeof(Motion),
@@ -402,13 +394,11 @@ void tick(uint8_t tick_type) {
 		if(BC->period_date_time != 0 &&
 		   BC->period_date_time_new &&
 		   BC->period_date_time_counter == 0) {
-			DateTime date_time = {
-				BS->stack_id,
-				TYPE_DATE_TIME,
-				sizeof(DateTime),
-				BC->buffer.date,
-				BC->buffer.time
-			};
+			DateTime date_time;
+			BA->com_make_default_header(&date_time, BS->uid, sizeof(DateTime), FID_DATE_TIME);
+
+			date_time.date = BC->buffer.date;
+			date_time.time = BC->buffer.time;
 
 			BA->send_blocking_with_timeout(&date_time,
 			                               sizeof(DateTime),
@@ -420,33 +410,33 @@ void tick(uint8_t tick_type) {
 	}
 }
 
-void invocation(uint8_t com, uint8_t *data) {
-	switch(((StandardMessage*)data)->type) {
-		case TYPE_GET_COORDINATES:                 get_coordinates(com, (GetCoordinates*)data); break;
-		case TYPE_GET_STATUS:                      get_status(com, (GetStatus*)data); break;
-		case TYPE_GET_ALTITUDE:                    get_altitude(com, (GetAltitude*)data); break;
-		case TYPE_GET_MOTION:                      get_motion(com, (GetMotion*)data); break;
-		case TYPE_GET_DATE_TIME:                   get_date_time(com, (GetDateTime*)data); break;
-		case TYPE_RESTART:                         restart(com, (Restart*)data); break;
-		case TYPE_SET_COORDINATES_CALLBACK_PERIOD: set_coordinates_callback_period(com, (SetCoordinatesCallbackPeriod*)data); break;
-		case TYPE_GET_COORDINATES_CALLBACK_PERIOD: get_coordinates_callback_period(com, (GetCoordinatesCallbackPeriod*)data); break;
-		case TYPE_SET_STATUS_CALLBACK_PERIOD:      set_status_callback_period(com, (SetStatusCallbackPeriod*)data); break;
-		case TYPE_GET_STATUS_CALLBACK_PERIOD:      get_status_callback_period(com, (GetStatusCallbackPeriod*)data); break;
-		case TYPE_SET_ALTITUDE_CALLBACK_PERIOD:    set_altitude_callback_period(com, (SetAltitudeCallbackPeriod*)data); break;
-		case TYPE_GET_ALTITUDE_CALLBACK_PERIOD:    get_altitude_callback_period(com, (GetAltitudeCallbackPeriod*)data); break;
-		case TYPE_SET_MOTION_CALLBACK_PERIOD:      set_motion_callback_period(com, (SetMotionCallbackPeriod*)data); break;
-		case TYPE_GET_MOTION_CALLBACK_PERIOD:      get_motion_callback_period(com, (GetMotionCallbackPeriod*)data); break;
-		case TYPE_SET_DATE_TIME_CALLBACK_PERIOD:   set_date_time_callback_period(com, (SetDateTimeCallbackPeriod*)data); break;
-		case TYPE_GET_DATE_TIME_CALLBACK_PERIOD:   get_date_time_callback_period(com, (GetDateTimeCallbackPeriod*)data); break;
+void invocation(const ComType com, const uint8_t *data) {
+	switch(((StandardMessage*)data)->header.fid) {
+		case FID_GET_COORDINATES:                 get_coordinates(com, (GetCoordinates*)data); break;
+		case FID_GET_STATUS:                      get_status(com, (GetStatus*)data); break;
+		case FID_GET_ALTITUDE:                    get_altitude(com, (GetAltitude*)data); break;
+		case FID_GET_MOTION:                      get_motion(com, (GetMotion*)data); break;
+		case FID_GET_DATE_TIME:                   get_date_time(com, (GetDateTime*)data); break;
+		case FID_RESTART:                         restart(com, (Restart*)data); break;
+		case FID_SET_COORDINATES_CALLBACK_PERIOD: set_coordinates_callback_period(com, (SetCoordinatesCallbackPeriod*)data); break;
+		case FID_GET_COORDINATES_CALLBACK_PERIOD: get_coordinates_callback_period(com, (GetCoordinatesCallbackPeriod*)data); break;
+		case FID_SET_STATUS_CALLBACK_PERIOD:      set_status_callback_period(com, (SetStatusCallbackPeriod*)data); break;
+		case FID_GET_STATUS_CALLBACK_PERIOD:      get_status_callback_period(com, (GetStatusCallbackPeriod*)data); break;
+		case FID_SET_ALTITUDE_CALLBACK_PERIOD:    set_altitude_callback_period(com, (SetAltitudeCallbackPeriod*)data); break;
+		case FID_GET_ALTITUDE_CALLBACK_PERIOD:    get_altitude_callback_period(com, (GetAltitudeCallbackPeriod*)data); break;
+		case FID_SET_MOTION_CALLBACK_PERIOD:      set_motion_callback_period(com, (SetMotionCallbackPeriod*)data); break;
+		case FID_GET_MOTION_CALLBACK_PERIOD:      get_motion_callback_period(com, (GetMotionCallbackPeriod*)data); break;
+		case FID_SET_DATE_TIME_CALLBACK_PERIOD:   set_date_time_callback_period(com, (SetDateTimeCallbackPeriod*)data); break;
+		case FID_GET_DATE_TIME_CALLBACK_PERIOD:   get_date_time_callback_period(com, (GetDateTimeCallbackPeriod*)data); break;
+		default: BA->com_return_error(data, sizeof(MessageHeader), MESSAGE_ERROR_CODE_NOT_SUPPORTED, com); break;
 	}
 }
 
-void get_coordinates(uint8_t com, const GetCoordinates *data) {
+void get_coordinates(const ComType com, const GetCoordinates *data) {
 	GetCoordinatesReturn gcr;
 
-	gcr.stack_id       = data->stack_id;
-	gcr.type           = data->type;
-	gcr.length         = sizeof(GetCoordinatesReturn);
+	gcr.header         = data->header;
+	gcr.header.length  = sizeof(GetCoordinatesReturn);
 	gcr.latitude       = BC->buffer.latitude;
 	gcr.ns             = BC->buffer.ns == 1 ? 'N' : 'S';
 	gcr.longitude      = BC->buffer.longitude;
@@ -459,12 +449,11 @@ void get_coordinates(uint8_t com, const GetCoordinates *data) {
 	BA->send_blocking_with_timeout(&gcr, sizeof(GetCoordinatesReturn), com);
 }
 
-void get_status(uint8_t com, const GetStatus *data) {
+void get_status(const ComType com, const GetStatus *data) {
 	GetStatusReturn gsr;
 
-	gsr.stack_id           = data->stack_id;
-	gsr.type               = data->type;
-	gsr.length             = sizeof(GetStatusReturn);
+	gsr.header             = data->header;
+	gsr.header.length      = sizeof(GetStatusReturn);
 	gsr.fix                = BC->buffer.fix_type;
 	gsr.satellites_view    = BC->buffer.satellites_view;
 	gsr.satellites_used    = BC->buffer.satellites_used;
@@ -472,43 +461,40 @@ void get_status(uint8_t com, const GetStatus *data) {
 	BA->send_blocking_with_timeout(&gsr, sizeof(GetStatusReturn), com);
 }
 
-void get_altitude(uint8_t com, const GetAltitude *data) {
+void get_altitude(const ComType com, const GetAltitude *data) {
 	GetAltitudeReturn gar;
 
-	gar.stack_id           = data->stack_id;
-	gar.type               = data->type;
-	gar.length             = sizeof(GetAltitudeReturn);
+	gar.header             = data->header;
+	gar.header.length      = sizeof(GetAltitudeReturn);
 	gar.altitude           = BC->buffer.altitude;
 	gar.geoidal_separation = BC->buffer.geoidal_separation;
 
 	BA->send_blocking_with_timeout(&gar, sizeof(GetAltitudeReturn), com);
 }
 
-void get_motion(uint8_t com, const GetMotion *data) {
+void get_motion(const ComType com, const GetMotion *data) {
 	GetMotionReturn gmr;
 
-	gmr.stack_id           = data->stack_id;
-	gmr.type               = data->type;
-	gmr.length             = sizeof(GetMotionReturn);
+	gmr.header             = data->header;
+	gmr.header.length      = sizeof(GetMotionReturn);
 	gmr.course             = BC->buffer.course;
 	gmr.speed              = BC->buffer.speed;
 
 	BA->send_blocking_with_timeout(&gmr, sizeof(GetMotionReturn), com);
 }
 
-void get_date_time(uint8_t com, const GetDateTime *data) {
+void get_date_time(const ComType com, const GetDateTime *data) {
 	GetDateTimeReturn gdtr;
 
-	gdtr.stack_id           = data->stack_id;
-	gdtr.type               = data->type;
-	gdtr.length             = sizeof(GetDateTimeReturn);
+	gdtr.header             = data->header;
+	gdtr.header.length      = sizeof(GetDateTimeReturn);
 	gdtr.date               = BC->buffer.date;
 	gdtr.time               = BC->buffer.time;
 
 	BA->send_blocking_with_timeout(&gdtr, sizeof(GetDateTimeReturn), com);
 }
 
-void restart(uint8_t com, const Restart *data) {
+void restart(const ComType com, const Restart *data) {
 	if(data->restart_type > 3) {
 		return;
 	}
@@ -534,16 +520,17 @@ void restart(uint8_t com, const Restart *data) {
 	}
 }
 
-void set_coordinates_callback_period(uint8_t com, const SetCoordinatesCallbackPeriod *data) {
+void set_coordinates_callback_period(const ComType com, const SetCoordinatesCallbackPeriod *data) {
 	BC->period_coordinates = data->period;
+
+	BA->com_return_setter(com, data);
 }
 
-void get_coordinates_callback_period(uint8_t com, const GetCoordinatesCallbackPeriod *data) {
+void get_coordinates_callback_period(const ComType com, const GetCoordinatesCallbackPeriod *data) {
 	GetCoordinatesCallbackPeriodReturn gccpr;
 
-	gccpr.stack_id       = data->stack_id;
-	gccpr.type           = data->type;
-	gccpr.length         = sizeof(GetCoordinatesCallbackPeriodReturn);
+	gccpr.header         = data->header;
+	gccpr.header.length  = sizeof(GetCoordinatesCallbackPeriodReturn);
 	gccpr.period         = BC->period_coordinates;
 
 	BA->send_blocking_with_timeout(&gccpr,
@@ -551,16 +538,17 @@ void get_coordinates_callback_period(uint8_t com, const GetCoordinatesCallbackPe
 	                               com);
 }
 
-void set_status_callback_period(uint8_t com, const SetStatusCallbackPeriod *data) {
+void set_status_callback_period(const ComType com, const SetStatusCallbackPeriod *data) {
 	BC->period_status = data->period;
+
+	BA->com_return_setter(com, data);
 }
 
-void get_status_callback_period(uint8_t com, const GetStatusCallbackPeriod *data) {
+void get_status_callback_period(const ComType com, const GetStatusCallbackPeriod *data) {
 	GetStatusCallbackPeriodReturn gscpr;
 
-	gscpr.stack_id       = data->stack_id;
-	gscpr.type           = data->type;
-	gscpr.length         = sizeof(GetStatusCallbackPeriodReturn);
+	gscpr.header         = data->header;
+	gscpr.header.length  = sizeof(GetStatusCallbackPeriodReturn);
 	gscpr.period         = BC->period_status;
 
 	BA->send_blocking_with_timeout(&gscpr,
@@ -568,16 +556,17 @@ void get_status_callback_period(uint8_t com, const GetStatusCallbackPeriod *data
 	                               com);
 }
 
-void set_altitude_callback_period(uint8_t com, const SetAltitudeCallbackPeriod *data) {
+void set_altitude_callback_period(const ComType com, const SetAltitudeCallbackPeriod *data) {
 	BC->period_altitude = data->period;
+
+	BA->com_return_setter(com, data);
 }
 
-void get_altitude_callback_period(uint8_t com, const GetAltitudeCallbackPeriod *data) {
+void get_altitude_callback_period(const ComType com, const GetAltitudeCallbackPeriod *data) {
 	GetAltitudeCallbackPeriodReturn gacpr;
 
-	gacpr.stack_id       = data->stack_id;
-	gacpr.type           = data->type;
-	gacpr.length         = sizeof(GetAltitudeCallbackPeriodReturn);
+	gacpr.header         = data->header;
+	gacpr.header.length  = sizeof(GetAltitudeCallbackPeriodReturn);
 	gacpr.period         = BC->period_altitude;
 
 	BA->send_blocking_with_timeout(&gacpr,
@@ -585,16 +574,17 @@ void get_altitude_callback_period(uint8_t com, const GetAltitudeCallbackPeriod *
 	                               com);
 }
 
-void set_motion_callback_period(uint8_t com, const SetMotionCallbackPeriod *data) {
+void set_motion_callback_period(const ComType com, const SetMotionCallbackPeriod *data) {
 	BC->period_motion = data->period;
+
+	BA->com_return_setter(com, data);
 }
 
-void get_motion_callback_period(uint8_t com, const GetMotionCallbackPeriod *data) {
+void get_motion_callback_period(const ComType com, const GetMotionCallbackPeriod *data) {
 	GetMotionCallbackPeriodReturn gmcpr;
 
-	gmcpr.stack_id       = data->stack_id;
-	gmcpr.type           = data->type;
-	gmcpr.length         = sizeof(GetMotionCallbackPeriodReturn);
+	gmcpr.header         = data->header;
+	gmcpr.header.length  = sizeof(GetMotionCallbackPeriodReturn);
 	gmcpr.period         = BC->period_motion;
 
 	BA->send_blocking_with_timeout(&gmcpr,
@@ -602,16 +592,17 @@ void get_motion_callback_period(uint8_t com, const GetMotionCallbackPeriod *data
 	                               com);
 }
 
-void set_date_time_callback_period(uint8_t com, const SetDateTimeCallbackPeriod *data) {
+void set_date_time_callback_period(const ComType com, const SetDateTimeCallbackPeriod *data) {
 	BC->period_date_time = data->period;
+
+	BA->com_return_setter(com, data);
 }
 
-void get_date_time_callback_period(uint8_t com, const GetDateTimeCallbackPeriod *data) {
+void get_date_time_callback_period(const ComType com, const GetDateTimeCallbackPeriod *data) {
 	GetDateTimeCallbackPeriodReturn gdtcpr;
 
-	gdtcpr.stack_id       = data->stack_id;
-	gdtcpr.type           = data->type;
-	gdtcpr.length         = sizeof(GetDateTimeCallbackPeriodReturn);
+	gdtcpr.header         = data->header;
+	gdtcpr.header.length  = sizeof(GetDateTimeCallbackPeriodReturn);
 	gdtcpr.period         = BC->period_date_time;
 
 	BA->send_blocking_with_timeout(&gdtcpr,

@@ -1,5 +1,6 @@
 /* gps-bricklet
  * Copyright (C) 2012 Matthias Bolte <matthias@tinkerforge.com>
+ * Copyright (C) 2012 Olaf Lüke <olaf@tinkerforge.com>
  *
  * config.h: GPS Bricklet specific configuration
  *
@@ -32,10 +33,15 @@
 
 #define BOARD_MCK 64000000
 
-#define BRICKLET_HARDWARE_NAME "GPS Bricklet 1.0"
-#define BRICKLET_FIRMWARE_VERSION_MAJOR 1
+#define BRICKLET_FIRMWARE_VERSION_MAJOR 2
 #define BRICKLET_FIRMWARE_VERSION_MINOR 0
 #define BRICKLET_FIRMWARE_VERSION_REVISION 0
+
+#define BRICKLET_HARDWARE_VERSION_MAJOR 1
+#define BRICKLET_HARDWARE_VERSION_MINOR 0
+#define BRICKLET_HARDWARE_VERSION_REVISION 0
+
+#define BRICKLET_DEVICE_IDENTIFIER 222
 
 #define LOGGING_LEVEL LOGGING_DEBUG
 #define DEBUG_BRICKLET 0
