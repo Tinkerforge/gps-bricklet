@@ -560,6 +560,7 @@ void get_battery_voltage(const ComType com, const GetBatteryVoltage *data) {
 
 void restart(const ComType com, const Restart *data) {
 	if(data->restart_type > 3) {
+		BA->com_return_error(data, sizeof(MessageHeader), MESSAGE_ERROR_CODE_INVALID_PARAMETER, com);
 		return;
 	}
 
