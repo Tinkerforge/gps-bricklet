@@ -569,17 +569,25 @@ void restart(const ComType com, const Restart *data) {
 		BA->bricklet_select(BS->port - 'a');
 
 		const char last_digit[4] = {'2', '1', '0', '7'};
-		char *str = "$PMTK101*30\r\n";
-		str[8] += data->restart_type; // FIXME: is this safe, as in does this do a copy?
-		str[10] = last_digit[data->restart_type];
+		char *str = "$PMTK10x*3y\r\n";
 
 		while(*str != '\0') {
 			const uint8_t lsr = sc16is740_read_register(I2C_INTERNAL_ADDRESS_LSR);
 			if(lsr & SC16IS740_LSR_THR_IS_EMPTY) {
-				sc16is740_write_register(I2C_INTERNAL_ADDRESS_THR, *str);
+				char c = *str;
+				if(c == 'x') {
+					c = '1' + data->restart_type;
+				} else if (c == 'y') {
+					c = last_digit[data->restart_type];
+				}
+
+				sc16is740_write_register(I2C_INTERNAL_ADDRESS_THR, c);
 				str++;
 			}
 		}
+
+		BC->in_sync = false;
+		BC->unpacked_sentence.fix_type = 1;
 
 		BA->bricklet_deselect(BS->port - 'a');
 		BA->mutex_give(*BA->mutex_twi_bricklet);
