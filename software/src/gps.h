@@ -32,25 +32,24 @@
 #define FID_GET_ALTITUDE 3
 #define FID_GET_MOTION 4
 #define FID_GET_DATE_TIME 5
-#define FID_GET_BATTERY_VOLTAGE 6
-#define FID_RESTART 7
-#define FID_SET_COORDINATES_CALLBACK_PERIOD 8
-#define FID_GET_COORDINATES_CALLBACK_PERIOD 9
-#define FID_SET_STATUS_CALLBACK_PERIOD 10
-#define FID_GET_STATUS_CALLBACK_PERIOD 11
-#define FID_SET_ALTITUDE_CALLBACK_PERIOD 12
-#define FID_GET_ALTITUDE_CALLBACK_PERIOD 13
-#define FID_SET_MOTION_CALLBACK_PERIOD 14
-#define FID_GET_MOTION_CALLBACK_PERIOD 15
-#define FID_SET_DATE_TIME_CALLBACK_PERIOD 16
-#define FID_GET_DATE_TIME_CALLBACK_PERIOD 17
-#define FID_COORDINATES 18
-#define FID_STATUS 19
-#define FID_ALTITUDE 20
-#define FID_MOTION 21
-#define FID_DATE_TIME 22
+#define FID_RESTART 6
+#define FID_SET_COORDINATES_CALLBACK_PERIOD 7
+#define FID_GET_COORDINATES_CALLBACK_PERIOD 8
+#define FID_SET_STATUS_CALLBACK_PERIOD 9
+#define FID_GET_STATUS_CALLBACK_PERIOD 10
+#define FID_SET_ALTITUDE_CALLBACK_PERIOD 11
+#define FID_GET_ALTITUDE_CALLBACK_PERIOD 12
+#define FID_SET_MOTION_CALLBACK_PERIOD 13
+#define FID_GET_MOTION_CALLBACK_PERIOD 14
+#define FID_SET_DATE_TIME_CALLBACK_PERIOD 15
+#define FID_GET_DATE_TIME_CALLBACK_PERIOD 16
+#define FID_COORDINATES 17
+#define FID_STATUS 18
+#define FID_ALTITUDE 19
+#define FID_MOTION 20
+#define FID_DATE_TIME 21
 
-#define FID_LAST 22
+#define FID_LAST 21
 
 typedef struct {
 	MessageHeader header;
@@ -108,15 +107,6 @@ typedef struct {
 	uint32_t date;
 	uint32_t time;
 } __attribute__((__packed__)) GetDateTimeReturn;
-
-typedef struct {
-	MessageHeader header;
-} __attribute__((__packed__)) GetBatteryVoltage;
-
-typedef struct {
-	MessageHeader header;
-	uint16_t voltage;
-} __attribute__((__packed__)) GetBatteryVoltageReturn;
 
 typedef struct {
 	MessageHeader header;
@@ -239,7 +229,6 @@ void get_status(const ComType com, const GetStatus *data);
 void get_altitude(const ComType com, const GetAltitude *data);
 void get_motion(const ComType com, const GetMotion *data);
 void get_date_time(const ComType com, const GetDateTime *data);
-void get_battery_voltage(const ComType com, const GetBatteryVoltage *data);
 void restart(const ComType com, const Restart *data);
 void set_coordinates_callback_period(const ComType com, const SetCoordinatesCallbackPeriod *data);
 void get_coordinates_callback_period(const ComType com, const GetCoordinatesCallbackPeriod *data);
