@@ -25,11 +25,7 @@
 #include "brickletlib/bricklet_entry.h"
 #include "bricklib/bricklet/bricklet_communication.h"
 #include "bricklib/utility/util_definitions.h"
-#include "bricklib/drivers/adc/adc.h"
 #include "config.h"
-
-#define MAX_ADC_VALUE ((1 << 12) - 1)
-#define MAX_VOLTAGE 3300
 
 uint8_t sc16is740_get_address(void) {
 	if(BS->address == I2C_EEPROM_ADDRESS_HIGH) {
@@ -222,14 +218,6 @@ void constructor(void) {
 	_Static_assert(sizeof(BrickContext) <= BRICKLET_CONTEXT_MAX_SIZE,
 	               "BrickContext too big");
 
-	BC->counter = 0;
-
-	adc_channel_enable(BS->adc_channel);
-
-	BC->voltage_avg_sum = 0;
-	BC->voltage_avg = 0;
-	BC->voltage_tick = 0;
-
 	mt3339_disable();
 	sc16is740_reset();
 
@@ -268,60 +256,55 @@ void constructor(void) {
 }
 
 void destructor(void) {
-	adc_channel_disable(BS->adc_channel);
 }
 
 void tick(uint8_t tick_type) {
 	if(tick_type & TICK_TASK_TYPE_CALCULATION) {
-		if(BC->counter != 0 && BC->counter != 255) {
-			BC->counter--;
+		if(BA->mutex_take(*BA->mutex_twi_bricklet, 10)) {
+			BA->bricklet_select(BS->port - 'a');
 
-			if(BA->mutex_take(*BA->mutex_twi_bricklet, 10)) {
-				BA->bricklet_select(BS->port - 'a');
+			uint8_t lsr = sc16is740_read_register(I2C_INTERNAL_ADDRESS_LSR);
 
-				uint8_t lsr = sc16is740_read_register(I2C_INTERNAL_ADDRESS_LSR);
+			if((lsr & 0x1C) != 0) {
+				// TODO: error handling?
+				BC->in_sync = false;
+			} else if(lsr & SC16IS740_LSR_OVERRUN_ERROR) {
+				// TODO: error handling?
+				BC->in_sync = false;
+			} else if(lsr & SC16IS740_LSR_DATA_IN_RECEIVER) {
+				if(BC->in_sync) {
+					// read and parse data
+					uint8_t *p = (uint8_t *)&BC->packed_sentence + BC->packed_sentence_used;
 
-				if((lsr & 0x1C) != 0) {
-					// TODO: error handling?
-					BC->in_sync = false;
-				} else if(lsr & SC16IS740_LSR_OVERRUN_ERROR) {
-					// TODO: error handling?
-					BC->in_sync = false;
-				} else if(lsr & SC16IS740_LSR_DATA_IN_RECEIVER) {
-					if(BC->in_sync) {
-						// read and parse data
-						uint8_t *p = (uint8_t *)&BC->packed_sentence + BC->packed_sentence_used;
+					*p = sc16is740_read_register(I2C_INTERNAL_ADDRESS_RHR);
+					BC->packed_sentence_used += 1;
 
-						*p = sc16is740_read_register(I2C_INTERNAL_ADDRESS_RHR);
-						BC->packed_sentence_used += 1;
+					if(BC->packed_sentence_used == sizeof(PackedBinarySentence)) {
+						BC->packed_sentence_used = 0;
 
-						if(BC->packed_sentence_used == sizeof(PackedBinarySentence)) {
-							BC->packed_sentence_used = 0;
+						bool result = parse_packed_sentence();
 
-							bool result = parse_packed_sentence();
-
-							if(!result) {
-								BC->in_sync = false;
-							}
-
-							BC->period_coordinates_new = result;
-							BC->period_status_new = result;
-							BC->period_altitude_new = result;
-							BC->period_motion_new = result;
-							BC->period_date_time_new = result;
+						if(!result) {
+							BC->in_sync = false;
 						}
-					} else {
-						// drop data
-						sc16is740_read_register(I2C_INTERNAL_ADDRESS_RHR);
-					}
-				} else if(!BC->in_sync) {
-					BC->in_sync = true;
-					BC->packed_sentence_used = 0;
-				}
 
-				BA->bricklet_deselect(BS->port - 'a');
-				BA->mutex_give(*BA->mutex_twi_bricklet);
+						BC->period_coordinates_new = result;
+						BC->period_status_new = result;
+						BC->period_altitude_new = result;
+						BC->period_motion_new = result;
+						BC->period_date_time_new = result;
+					}
+				} else {
+					// drop data
+					sc16is740_read_register(I2C_INTERNAL_ADDRESS_RHR);
+				}
+			} else if(!BC->in_sync) {
+				BC->in_sync = true;
+				BC->packed_sentence_used = 0;
 			}
+
+			BA->bricklet_deselect(BS->port - 'a');
+			BA->mutex_give(*BA->mutex_twi_bricklet);
 		}
 
 		if(BC->period_coordinates_counter != 0) {
@@ -342,30 +325,6 @@ void tick(uint8_t tick_type) {
 
 		if(BC->period_date_time_counter != 0) {
 			BC->period_date_time_counter--;
-		}
-
-		if(BC->counter == 0) {
-			// wait a tick between I2C communication and ADC readout
-			BC->counter = 255;
-		} else if(BC->counter == 255) {
-			// update battery voltage
-			BC->counter = sizeof(PackedBinarySentence);
-
-			BC->voltage_avg_sum += BA->adc_channel_get_data(BS->adc_channel);
-			BC->voltage_tick = (BC->voltage_tick + 1) % VOLTAGE_AVERAGE;
-
-			if(BC->voltage_tick % VOLTAGE_AVERAGE == 0) {
-				BC->voltage_avg_sum += VOLTAGE_AVERAGE * (MAX_ADC_VALUE / MAX_VOLTAGE) / 2;
-
-				if(BC->voltage_avg_sum > MAX_ADC_VALUE * VOLTAGE_AVERAGE) {
-					BC->voltage_avg_sum = MAX_ADC_VALUE * VOLTAGE_AVERAGE;
-				}
-
-				BC->voltage_avg = SCALE(BC->voltage_avg_sum / VOLTAGE_AVERAGE,
-				                        0, MAX_ADC_VALUE,
-				                        0, MAX_VOLTAGE);
-				BC->voltage_avg_sum = 0;
-			}
 		}
 	}
 
@@ -481,7 +440,6 @@ void invocation(uint8_t com, uint8_t *data) {
 		case TYPE_GET_ALTITUDE:                    get_altitude(com, (GetAltitude*)data); break;
 		case TYPE_GET_MOTION:                      get_motion(com, (GetMotion*)data); break;
 		case TYPE_GET_DATE_TIME:                   get_date_time(com, (GetDateTime*)data); break;
-		case TYPE_GET_BATTERY_VOLTAGE:             get_battery_voltage(com, (GetBatteryVoltage*)data); break;
 		case TYPE_RESTART:                         restart(com, (Restart*)data); break;
 		case TYPE_SET_COORDINATES_CALLBACK_PERIOD: set_coordinates_callback_period(com, (SetCoordinatesCallbackPeriod*)data); break;
 		case TYPE_GET_COORDINATES_CALLBACK_PERIOD: get_coordinates_callback_period(com, (GetCoordinatesCallbackPeriod*)data); break;
@@ -561,17 +519,6 @@ void get_date_time(uint8_t com, const GetDateTime *data) {
 	gdtr.time               = BC->unpacked_sentence.time;
 
 	BA->send_blocking_with_timeout(&gdtr, sizeof(GetDateTimeReturn), com);
-}
-
-void get_battery_voltage(uint8_t com, const GetBatteryVoltage *data) {
-	GetBatteryVoltageReturn gbvr;
-
-	gbvr.stack_id           = data->stack_id;
-	gbvr.type               = data->type;
-	gbvr.length             = sizeof(GetDateTimeReturn);
-	gbvr.voltage            = BC->voltage_avg;
-
-	BA->send_blocking_with_timeout(&gbvr, sizeof(GetBatteryVoltageReturn), com);
 }
 
 void restart(uint8_t com, const Restart *data) {

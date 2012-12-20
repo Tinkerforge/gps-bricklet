@@ -42,8 +42,6 @@
 
 #define INVOCATION_IN_BRICKLET_CODE
 
-#define VOLTAGE_AVERAGE 50
-
 typedef struct {
 	uint8_t preamble[2];
 	uint32_t time;
@@ -91,8 +89,6 @@ typedef struct {
 } UnpackedBinarySentence;
 
 typedef struct {
-	uint8_t counter;
-
 	bool in_sync;
 	PackedBinarySentence packed_sentence;
 	uint8_t packed_sentence_used;
@@ -118,9 +114,6 @@ typedef struct {
 	uint32_t period_date_time_counter;
 	bool period_date_time_new;
 
-	uint32_t voltage_avg_sum;
-	uint32_t voltage_avg;
-	uint8_t voltage_tick;
 } BrickContext;
 
 #endif

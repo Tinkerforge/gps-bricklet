@@ -30,25 +30,24 @@
 #define TYPE_GET_ALTITUDE 3
 #define TYPE_GET_MOTION 4
 #define TYPE_GET_DATE_TIME 5
-#define TYPE_GET_BATTERY_VOLTAGE 6
-#define TYPE_RESTART 7
-#define TYPE_SET_COORDINATES_CALLBACK_PERIOD 8
-#define TYPE_GET_COORDINATES_CALLBACK_PERIOD 9
-#define TYPE_SET_STATUS_CALLBACK_PERIOD 10
-#define TYPE_GET_STATUS_CALLBACK_PERIOD 11
-#define TYPE_SET_ALTITUDE_CALLBACK_PERIOD 12
-#define TYPE_GET_ALTITUDE_CALLBACK_PERIOD 13
-#define TYPE_SET_MOTION_CALLBACK_PERIOD 14
-#define TYPE_GET_MOTION_CALLBACK_PERIOD 15
-#define TYPE_SET_DATE_TIME_CALLBACK_PERIOD 16
-#define TYPE_GET_DATE_TIME_CALLBACK_PERIOD 17
-#define TYPE_COORDINATES 18
-#define TYPE_STATUS 19
-#define TYPE_ALTITUDE 20
-#define TYPE_MOTION 21
-#define TYPE_DATE_TIME 22
+#define TYPE_RESTART 6
+#define TYPE_SET_COORDINATES_CALLBACK_PERIOD 7
+#define TYPE_GET_COORDINATES_CALLBACK_PERIOD 8
+#define TYPE_SET_STATUS_CALLBACK_PERIOD 9
+#define TYPE_GET_STATUS_CALLBACK_PERIOD 10
+#define TYPE_SET_ALTITUDE_CALLBACK_PERIOD 11
+#define TYPE_GET_ALTITUDE_CALLBACK_PERIOD 12
+#define TYPE_SET_MOTION_CALLBACK_PERIOD 13
+#define TYPE_GET_MOTION_CALLBACK_PERIOD 14
+#define TYPE_SET_DATE_TIME_CALLBACK_PERIOD 15
+#define TYPE_GET_DATE_TIME_CALLBACK_PERIOD 16
+#define TYPE_COORDINATES 17
+#define TYPE_STATUS 18
+#define TYPE_ALTITUDE 19
+#define TYPE_MOTION 20
+#define TYPE_DATE_TIME 21
 
-#define NUM_MESSAGES 17
+#define NUM_MESSAGES 16
 
 typedef struct {
 	uint8_t stack_id;
@@ -126,19 +125,6 @@ typedef struct {
 	uint32_t date;
 	uint32_t time;
 } __attribute__((__packed__)) GetDateTimeReturn;
-
-typedef struct {
-	uint8_t stack_id;
-	uint8_t type;
-	uint16_t length;
-} __attribute__((__packed__)) GetBatteryVoltage;
-
-typedef struct {
-	uint8_t stack_id;
-	uint8_t type;
-	uint16_t length;
-	uint16_t voltage;
-} __attribute__((__packed__)) GetBatteryVoltageReturn;
 
 typedef struct {
 	uint8_t stack_id;
@@ -305,7 +291,6 @@ void get_status(uint8_t com, const GetStatus *data);
 void get_altitude(uint8_t com, const GetAltitude *data);
 void get_motion(uint8_t com, const GetMotion *data);
 void get_date_time(uint8_t com, const GetDateTime *data);
-void get_battery_voltage(uint8_t com, const GetBatteryVoltage *data);
 void restart(uint8_t com, const Restart *data);
 void set_coordinates_callback_period(uint8_t com, const SetCoordinatesCallbackPeriod *data);
 void get_coordinates_callback_period(uint8_t com, const GetCoordinatesCallbackPeriod *data);
