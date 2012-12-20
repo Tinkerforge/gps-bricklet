@@ -95,10 +95,11 @@ bool parse_packed_sentence(void) {
 
 	// Checksum
 	uint8_t xor = 0;
+	uint8_t *p = ((uint8_t *)&BC->packed_sentence) + offsetof(PackedBinarySentence, time);
+	uint8_t *e = ((uint8_t *)&BC->packed_sentence) + offsetof(PackedBinarySentence, asterisk);
 
-	for(uint8_t *p = ((uint8_t *)&BC->packed_sentence) + offsetof(PackedBinarySentence, time);
-	    p < ((uint8_t *)&BC->packed_sentence) + offsetof(PackedBinarySentence, asterisk); p++) {
-		xor ^= *p;
+	while(p < e) {
+		xor ^= *p++;
 	}
 
 	if(xor != BC->packed_sentence.checksum) {
@@ -267,7 +268,7 @@ void constructor(void) {
 }
 
 void destructor(void) {
-	adc_channel_disable(BS->adc_channel);
+	//adc_channel_disable(BS->adc_channel); // FIXME: save some byte plugin size
 }
 
 void tick(const uint8_t tick_type) {
