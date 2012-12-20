@@ -288,10 +288,10 @@ void tick(const uint8_t tick_type) {
 							BC->in_sync = false;
 						}
 
-						BC->period_coordinates_new = result;
+						BC->period_coordinates_new = result && BC->unpacked_sentence.fix_type != 1;
 						BC->period_status_new = result;
-						BC->period_altitude_new = result;
-						BC->period_motion_new = result;
+						BC->period_altitude_new = result && BC->unpacked_sentence.fix_type != 1;
+						BC->period_motion_new = result && BC->unpacked_sentence.fix_type != 1;
 						BC->period_date_time_new = result;
 					}
 				} else {
@@ -536,6 +536,10 @@ void restart(const ComType com, const Restart *data) {
 
 		BC->in_sync = false;
 		BC->unpacked_sentence.fix_type = 1;
+
+		BC->period_coordinates_new = false;
+		BC->period_altitude_new = false;
+		BC->period_motion_new = false;
 
 		BA->bricklet_deselect(BS->port - 'a');
 		BA->mutex_give(*BA->mutex_twi_bricklet);
