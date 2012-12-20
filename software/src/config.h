@@ -42,6 +42,8 @@
 
 #define INVOCATION_IN_BRICKLET_CODE
 
+#define VOLTAGE_AVERAGE 50
+
 typedef struct {
 	uint8_t preamble[2];
 	uint32_t time;
@@ -65,11 +67,36 @@ typedef struct {
 	uint8_t asterisk;
 	uint8_t checksum;
 	uint8_t end[2];
-} __attribute__((packed)) BinarySentence;
+} __attribute__((packed)) PackedBinarySentence;
 
 typedef struct {
-	BinarySentence buffer;
+	uint32_t time;
+	uint32_t date;
+	uint32_t latitude;
+	uint8_t ns;
+	uint32_t longitude;
+	uint8_t ew;
+	uint8_t fix_type;
+	uint8_t fix_mode;
+	uint32_t altitude;
+	uint32_t geoidal_separation;
+	uint32_t course;
+	uint32_t speed;
+	uint8_t satellites_view;
+	uint8_t satellites_used;
+	uint16_t pdop;
+	uint16_t hdop;
+	uint16_t vdop;
+	uint16_t epe;
+} UnpackedBinarySentence;
+
+typedef struct {
+	uint8_t counter;
+
 	bool in_sync;
+	PackedBinarySentence packed_sentence;
+	uint8_t packed_sentence_used;
+	UnpackedBinarySentence unpacked_sentence;
 
 	uint32_t period_coordinates;
 	uint32_t period_coordinates_counter;
@@ -90,6 +117,10 @@ typedef struct {
 	uint32_t period_date_time;
 	uint32_t period_date_time_counter;
 	bool period_date_time_new;
+
+	uint32_t voltage_avg_sum;
+	uint32_t voltage_avg;
+	uint8_t voltage_tick;
 } BrickContext;
 
 #endif

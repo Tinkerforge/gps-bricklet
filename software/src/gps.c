@@ -25,7 +25,11 @@
 #include "brickletlib/bricklet_entry.h"
 #include "bricklib/bricklet/bricklet_communication.h"
 #include "bricklib/utility/util_definitions.h"
+#include "bricklib/drivers/adc/adc.h"
 #include "config.h"
+
+#define MAX_ADC_VALUE ((1 << 12) - 1)
+#define MAX_VOLTAGE 3300
 
 uint8_t sc16is740_get_address(void) {
 	if(BS->address == I2C_EEPROM_ADDRESS_HIGH) {
@@ -79,62 +83,69 @@ uint32_t swap_uint32(uint32_t value) {
 	return result;
 }
 
-bool parse_buffer(void) {
+bool parse_packed_sentence(void) {
 	// Preamble and end
-	if(BC->buffer.preamble[0] != 0x04 ||
-	   BC->buffer.preamble[1] != '$' ||
-	   BC->buffer.asterisk != '*' ||
-	   BC->buffer.end[0] != '\r' ||
-	   BC->buffer.end[1] != '\n') {
+	if(BC->packed_sentence.preamble[0] != 0x04 ||
+	   BC->packed_sentence.preamble[1] != '$' ||
+	   BC->packed_sentence.asterisk != '*' ||
+	   BC->packed_sentence.end[0] != '\r' ||
+	   BC->packed_sentence.end[1] != '\n') {
 		return false;
 	}
 
 	// Checksum
 	uint8_t xor = 0;
+	uint8_t *p = ((uint8_t *)&BC->packed_sentence) + offsetof(PackedBinarySentence, time);
+	uint8_t *e = ((uint8_t *)&BC->packed_sentence) + offsetof(PackedBinarySentence, asterisk);
 
-	for(uint8_t *p = ((uint8_t *)&BC->buffer) + offsetof(BinarySentence, time);
-	    p < ((uint8_t *)&BC->buffer) + offsetof(BinarySentence, asterisk); p++) {
-		xor ^= *p;
+	while(p < e) {
+		xor ^= *p++;
 	}
 
-	if(xor != BC->buffer.checksum) {
+	if(xor != BC->packed_sentence.checksum) {
 		return false;
 	}
+
+	// Unpack to avoid packed access and convert big to little endian
+	BC->unpacked_sentence.time               = swap_uint32(BC->packed_sentence.time);
+	BC->unpacked_sentence.date               = swap_uint32(BC->packed_sentence.date);
+	BC->unpacked_sentence.latitude           = swap_uint32(BC->packed_sentence.latitude);
+	BC->unpacked_sentence.ns                 = BC->packed_sentence.ns;
+	BC->unpacked_sentence.longitude          = swap_uint32(BC->packed_sentence.longitude);
+	BC->unpacked_sentence.ew                 = BC->packed_sentence.ew;
+	BC->unpacked_sentence.fix_type           = BC->packed_sentence.fix_type;
+	BC->unpacked_sentence.fix_mode           = BC->packed_sentence.fix_mode;
+	BC->unpacked_sentence.altitude           = swap_uint32(BC->packed_sentence.altitude);
+	BC->unpacked_sentence.geoidal_separation = swap_uint32(BC->packed_sentence.geoidal_separation);
+	BC->unpacked_sentence.course             = swap_uint32(BC->packed_sentence.course);
+	BC->unpacked_sentence.speed              = swap_uint32(BC->packed_sentence.speed);
+	BC->unpacked_sentence.satellites_view    = BC->packed_sentence.satellites_view;
+	BC->unpacked_sentence.satellites_used    = BC->packed_sentence.satellites_used;
+	BC->unpacked_sentence.pdop               = swap_uint16(BC->packed_sentence.pdop);
+	BC->unpacked_sentence.hdop               = swap_uint16(BC->packed_sentence.hdop);
+	BC->unpacked_sentence.vdop               = swap_uint16(BC->packed_sentence.vdop);
+	BC->unpacked_sentence.epe                = swap_uint16(BC->packed_sentence.epe);
 
 	// Validate
-	if(BC->buffer.ns != 1 && BC->buffer.ns != 2) {
+	if(BC->unpacked_sentence.ns != 1 && BC->unpacked_sentence.ns != 2) {
 		return false;
 	}
 
-	if(BC->buffer.ew != 1 && BC->buffer.ew != 2) {
+	if(BC->unpacked_sentence.ew != 1 && BC->unpacked_sentence.ew != 2) {
 		return false;
 	}
 
-	if(BC->buffer.fix_type != 1 &&
-	   BC->buffer.fix_type != 2 &&
-	   BC->buffer.fix_type != 3) {
+	if(BC->unpacked_sentence.fix_type != 1 &&
+	   BC->unpacked_sentence.fix_type != 2 &&
+	   BC->unpacked_sentence.fix_type != 3) {
 		return false;
 	}
 
-	if(BC->buffer.fix_mode != 0 &&
-	   BC->buffer.fix_mode != 1 &&
-	   BC->buffer.fix_mode != 2) {
+	if(BC->unpacked_sentence.fix_mode != 0 &&
+	   BC->unpacked_sentence.fix_mode != 1 &&
+	   BC->unpacked_sentence.fix_mode != 2) {
 		return false;
 	}
-
-	// Big to little endian
-	BC->buffer.time               = swap_uint32(BC->buffer.time);
-	BC->buffer.date               = swap_uint32(BC->buffer.date);
-	BC->buffer.latitude           = swap_uint32(BC->buffer.latitude);
-	BC->buffer.longitude          = swap_uint32(BC->buffer.longitude);
-	BC->buffer.altitude           = swap_uint32(BC->buffer.altitude);
-	BC->buffer.geoidal_separation = swap_uint32(BC->buffer.geoidal_separation);
-	BC->buffer.course             = swap_uint32(BC->buffer.course);
-	BC->buffer.speed              = swap_uint32(BC->buffer.speed);
-	BC->buffer.pdop               = swap_uint16(BC->buffer.pdop);
-	BC->buffer.hdop               = swap_uint16(BC->buffer.hdop);
-	BC->buffer.vdop               = swap_uint16(BC->buffer.vdop);
-	BC->buffer.epe                = swap_uint16(BC->buffer.epe);
 
 	return true;
 }
@@ -211,10 +222,26 @@ void constructor(void) {
 	_Static_assert(sizeof(BrickContext) <= BRICKLET_CONTEXT_MAX_SIZE,
 	               "BrickContext too big");
 
+	BC->counter = 0;
+
+	adc_channel_enable(BS->adc_channel);
+
+	BC->voltage_avg_sum = 0;
+	BC->voltage_avg = 0;
+	BC->voltage_tick = 0;
+
 	mt3339_disable();
 	sc16is740_reset();
 
 	BC->in_sync = false;
+	BC->packed_sentence_used = 0;
+
+	uint8_t *p = (uint8_t *)&BC->unpacked_sentence;
+	uint8_t *e = p + sizeof(UnpackedBinarySentence);
+
+	while(p < e) {
+		*p++ = 0;
+	}
 
 	BC->period_coordinates = 0;
 	BC->period_coordinates_counter = 0;
@@ -241,57 +268,60 @@ void constructor(void) {
 }
 
 void destructor(void) {
+	adc_channel_disable(BS->adc_channel);
 }
 
 void tick(uint8_t tick_type) {
 	if(tick_type & TICK_TASK_TYPE_CALCULATION) {
-		if(BA->mutex_take(*BA->mutex_twi_bricklet, 10)) {
-			BA->bricklet_select(BS->port - 'a');
+		if(BC->counter != 0 && BC->counter != 255) {
+			BC->counter--;
 
-			uint8_t lsr = sc16is740_read_register(I2C_INTERNAL_ADDRESS_LSR);
+			if(BA->mutex_take(*BA->mutex_twi_bricklet, 10)) {
+				BA->bricklet_select(BS->port - 'a');
 
-			if((lsr & 0x1C) != 0) {
-				// TODO: error handling?
-				BC->in_sync = false;
-			} else if(lsr & SC16IS740_LSR_OVERRUN_ERROR) {
-				// TODO: error handling?
-				BC->in_sync = false;
-			} else if(lsr & SC16IS740_LSR_DATA_IN_RECEIVER) {
-				uint8_t rxlvl = sc16is740_read_register(I2C_INTERNAL_ADDRESS_RXLVL);
+				uint8_t lsr = sc16is740_read_register(I2C_INTERNAL_ADDRESS_LSR);
 
-				if(BC->in_sync) {
-					if(rxlvl >= sizeof(BinarySentence)) {
-						// read and parse all data
-						uint8_t *p = (uint8_t *)&BC->buffer;
+				if((lsr & 0x1C) != 0) {
+					// TODO: error handling?
+					BC->in_sync = false;
+				} else if(lsr & SC16IS740_LSR_OVERRUN_ERROR) {
+					// TODO: error handling?
+					BC->in_sync = false;
+				} else if(lsr & SC16IS740_LSR_DATA_IN_RECEIVER) {
+					if(BC->in_sync) {
+						// read and parse data
+						uint8_t *p = (uint8_t *)&BC->packed_sentence + BC->packed_sentence_used;
 
-						for(uint8_t i = 0; i < sizeof(BinarySentence); i++) {
-							*p++ = sc16is740_read_register(I2C_INTERNAL_ADDRESS_RHR);
+						*p = sc16is740_read_register(I2C_INTERNAL_ADDRESS_RHR);
+						BC->packed_sentence_used += 1;
+
+						if(BC->packed_sentence_used == sizeof(PackedBinarySentence)) {
+							BC->packed_sentence_used = 0;
+
+							bool result = parse_packed_sentence();
+
+							if(!result) {
+								BC->in_sync = false;
+							}
+
+							BC->period_coordinates_new = result;
+							BC->period_status_new = result;
+							BC->period_altitude_new = result;
+							BC->period_motion_new = result;
+							BC->period_date_time_new = result;
 						}
-
-						bool result = parse_buffer();
-
-						if(!result) {
-							BC->in_sync = false;
-						}
-
-						BC->period_coordinates_new = result;
-						BC->period_status_new = result;
-						BC->period_altitude_new = result;
-						BC->period_motion_new = result;
-						BC->period_date_time_new = result;
-					}
-				} else {
-					// drop all data
-					for(uint8_t i = 0; i < rxlvl; i++) {
+					} else {
+						// drop data
 						sc16is740_read_register(I2C_INTERNAL_ADDRESS_RHR);
 					}
+				} else if(!BC->in_sync) {
+					BC->in_sync = true;
+					BC->packed_sentence_used = 0;
 				}
-			} else if(!BC->in_sync) {
-				BC->in_sync = true;
-			}
 
-			BA->bricklet_deselect(BS->port - 'a');
-			BA->mutex_give(*BA->mutex_twi_bricklet);
+				BA->bricklet_deselect(BS->port - 'a');
+				BA->mutex_give(*BA->mutex_twi_bricklet);
+			}
 		}
 
 		if(BC->period_coordinates_counter != 0) {
@@ -313,6 +343,30 @@ void tick(uint8_t tick_type) {
 		if(BC->period_date_time_counter != 0) {
 			BC->period_date_time_counter--;
 		}
+
+		if(BC->counter == 0) {
+			// wait a tick between I2C communication and ADC readout
+			BC->counter = 255;
+		} else if(BC->counter == 255) {
+			// update battery voltage
+			BC->counter = sizeof(PackedBinarySentence);
+
+			BC->voltage_avg_sum += BA->adc_channel_get_data(BS->adc_channel);
+			BC->voltage_tick = (BC->voltage_tick + 1) % VOLTAGE_AVERAGE;
+
+			if(BC->voltage_tick % VOLTAGE_AVERAGE == 0) {
+				BC->voltage_avg_sum += VOLTAGE_AVERAGE * (MAX_ADC_VALUE / MAX_VOLTAGE) / 2;
+
+				if(BC->voltage_avg_sum > MAX_ADC_VALUE * VOLTAGE_AVERAGE) {
+					BC->voltage_avg_sum = MAX_ADC_VALUE * VOLTAGE_AVERAGE;
+				}
+
+				BC->voltage_avg = SCALE(BC->voltage_avg_sum / VOLTAGE_AVERAGE,
+				                        0, MAX_ADC_VALUE,
+				                        0, MAX_VOLTAGE);
+				BC->voltage_avg_sum = 0;
+			}
+		}
 	}
 
 	if(tick_type & TICK_TASK_TYPE_MESSAGE) {
@@ -323,14 +377,14 @@ void tick(uint8_t tick_type) {
 				BS->stack_id,
 				TYPE_COORDINATES,
 				sizeof(Coordinates),
-				BC->buffer.latitude,
-				BC->buffer.ns == 1 ? 'N' : 'S',
-				BC->buffer.longitude,
-				BC->buffer.ew == 1 ? 'E' : 'W',
-				BC->buffer.pdop,
-				BC->buffer.hdop,
-				BC->buffer.vdop,
-				BC->buffer.epe
+				BC->unpacked_sentence.latitude,
+				BC->unpacked_sentence.ns == 1 ? 'N' : 'S',
+				BC->unpacked_sentence.longitude,
+				BC->unpacked_sentence.ew == 1 ? 'E' : 'W',
+				BC->unpacked_sentence.pdop,
+				BC->unpacked_sentence.hdop,
+				BC->unpacked_sentence.vdop,
+				BC->unpacked_sentence.epe
 			};
 
 			BA->send_blocking_with_timeout(&coordinates,
@@ -348,9 +402,9 @@ void tick(uint8_t tick_type) {
 				BS->stack_id,
 				TYPE_STATUS,
 				sizeof(Status),
-				BC->buffer.fix_type,
-				BC->buffer.satellites_view,
-				BC->buffer.satellites_used
+				BC->unpacked_sentence.fix_type,
+				BC->unpacked_sentence.satellites_view,
+				BC->unpacked_sentence.satellites_used
 			};
 
 			BA->send_blocking_with_timeout(&status,
@@ -368,8 +422,8 @@ void tick(uint8_t tick_type) {
 				BS->stack_id,
 				TYPE_ALTITUDE,
 				sizeof(Altitude),
-				BC->buffer.altitude,
-				BC->buffer.geoidal_separation
+				BC->unpacked_sentence.altitude,
+				BC->unpacked_sentence.geoidal_separation
 			};
 
 			BA->send_blocking_with_timeout(&altitude,
@@ -387,8 +441,8 @@ void tick(uint8_t tick_type) {
 				BS->stack_id,
 				TYPE_MOTION,
 				sizeof(Motion),
-				BC->buffer.course,
-				BC->buffer.speed
+				BC->unpacked_sentence.course,
+				BC->unpacked_sentence.speed
 			};
 
 			BA->send_blocking_with_timeout(&motion,
@@ -406,8 +460,8 @@ void tick(uint8_t tick_type) {
 				BS->stack_id,
 				TYPE_DATE_TIME,
 				sizeof(DateTime),
-				BC->buffer.date,
-				BC->buffer.time
+				BC->unpacked_sentence.date,
+				BC->unpacked_sentence.time
 			};
 
 			BA->send_blocking_with_timeout(&date_time,
@@ -427,6 +481,7 @@ void invocation(uint8_t com, uint8_t *data) {
 		case TYPE_GET_ALTITUDE:                    get_altitude(com, (GetAltitude*)data); break;
 		case TYPE_GET_MOTION:                      get_motion(com, (GetMotion*)data); break;
 		case TYPE_GET_DATE_TIME:                   get_date_time(com, (GetDateTime*)data); break;
+		case TYPE_GET_BATTERY_VOLTAGE:             get_battery_voltage(com, (GetBatteryVoltage*)data); break;
 		case TYPE_RESTART:                         restart(com, (Restart*)data); break;
 		case TYPE_SET_COORDINATES_CALLBACK_PERIOD: set_coordinates_callback_period(com, (SetCoordinatesCallbackPeriod*)data); break;
 		case TYPE_GET_COORDINATES_CALLBACK_PERIOD: get_coordinates_callback_period(com, (GetCoordinatesCallbackPeriod*)data); break;
@@ -447,14 +502,14 @@ void get_coordinates(uint8_t com, const GetCoordinates *data) {
 	gcr.stack_id       = data->stack_id;
 	gcr.type           = data->type;
 	gcr.length         = sizeof(GetCoordinatesReturn);
-	gcr.latitude       = BC->buffer.latitude;
-	gcr.ns             = BC->buffer.ns == 1 ? 'N' : 'S';
-	gcr.longitude      = BC->buffer.longitude;
-	gcr.ew             = BC->buffer.ew == 1 ? 'E' : 'W';
-	gcr.pdop           = BC->buffer.pdop;
-	gcr.hdop           = BC->buffer.hdop;
-	gcr.vdop           = BC->buffer.vdop;
-	gcr.epe            = BC->buffer.epe;
+	gcr.latitude       = BC->unpacked_sentence.latitude;
+	gcr.ns             = BC->unpacked_sentence.ns == 1 ? 'N' : 'S';
+	gcr.longitude      = BC->unpacked_sentence.longitude;
+	gcr.ew             = BC->unpacked_sentence.ew == 1 ? 'E' : 'W';
+	gcr.pdop           = BC->unpacked_sentence.pdop;
+	gcr.hdop           = BC->unpacked_sentence.hdop;
+	gcr.vdop           = BC->unpacked_sentence.vdop;
+	gcr.epe            = BC->unpacked_sentence.epe;
 
 	BA->send_blocking_with_timeout(&gcr, sizeof(GetCoordinatesReturn), com);
 }
@@ -465,9 +520,9 @@ void get_status(uint8_t com, const GetStatus *data) {
 	gsr.stack_id           = data->stack_id;
 	gsr.type               = data->type;
 	gsr.length             = sizeof(GetStatusReturn);
-	gsr.fix                = BC->buffer.fix_type;
-	gsr.satellites_view    = BC->buffer.satellites_view;
-	gsr.satellites_used    = BC->buffer.satellites_used;
+	gsr.fix                = BC->unpacked_sentence.fix_type;
+	gsr.satellites_view    = BC->unpacked_sentence.satellites_view;
+	gsr.satellites_used    = BC->unpacked_sentence.satellites_used;
 
 	BA->send_blocking_with_timeout(&gsr, sizeof(GetStatusReturn), com);
 }
@@ -478,8 +533,8 @@ void get_altitude(uint8_t com, const GetAltitude *data) {
 	gar.stack_id           = data->stack_id;
 	gar.type               = data->type;
 	gar.length             = sizeof(GetAltitudeReturn);
-	gar.altitude           = BC->buffer.altitude;
-	gar.geoidal_separation = BC->buffer.geoidal_separation;
+	gar.altitude           = BC->unpacked_sentence.altitude;
+	gar.geoidal_separation = BC->unpacked_sentence.geoidal_separation;
 
 	BA->send_blocking_with_timeout(&gar, sizeof(GetAltitudeReturn), com);
 }
@@ -490,8 +545,8 @@ void get_motion(uint8_t com, const GetMotion *data) {
 	gmr.stack_id           = data->stack_id;
 	gmr.type               = data->type;
 	gmr.length             = sizeof(GetMotionReturn);
-	gmr.course             = BC->buffer.course;
-	gmr.speed              = BC->buffer.speed;
+	gmr.course             = BC->unpacked_sentence.course;
+	gmr.speed              = BC->unpacked_sentence.speed;
 
 	BA->send_blocking_with_timeout(&gmr, sizeof(GetMotionReturn), com);
 }
@@ -502,10 +557,21 @@ void get_date_time(uint8_t com, const GetDateTime *data) {
 	gdtr.stack_id           = data->stack_id;
 	gdtr.type               = data->type;
 	gdtr.length             = sizeof(GetDateTimeReturn);
-	gdtr.date               = BC->buffer.date;
-	gdtr.time               = BC->buffer.time;
+	gdtr.date               = BC->unpacked_sentence.date;
+	gdtr.time               = BC->unpacked_sentence.time;
 
 	BA->send_blocking_with_timeout(&gdtr, sizeof(GetDateTimeReturn), com);
+}
+
+void get_battery_voltage(uint8_t com, const GetBatteryVoltage *data) {
+	GetBatteryVoltageReturn gbvr;
+
+	gbvr.stack_id           = data->stack_id;
+	gbvr.type               = data->type;
+	gbvr.length             = sizeof(GetDateTimeReturn);
+	gbvr.voltage            = BC->voltage_avg;
+
+	BA->send_blocking_with_timeout(&gbvr, sizeof(GetBatteryVoltageReturn), com);
 }
 
 void restart(uint8_t com, const Restart *data) {
