@@ -8,8 +8,8 @@ class Example
 
 	// Callback function for coordinates callback
 	static void CoordinatesCB(object sender,
-	                          uint latitude, char ns, uint longitude, char ew, 
-	                          ushort pdop, ushort hdop, ushort vdop, ushort epe)
+	                          long latitude, char ns, long longitude, char ew, 
+	                          int pdop, int hdop, int vdop, int epe)
 	{
 
 		System.Console.WriteLine("Latitude: " + latitude/1000000.0 + "° " + ns);

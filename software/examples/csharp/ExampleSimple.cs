@@ -14,11 +14,11 @@ class Example
 		ipcon.Connect(HOST, PORT); // Connect to brickd
 		// Don't use device before ipcon is connected
 
-		uint latitude;
+		long latitude;
 		char ns;
-		uint longitude;
+		long longitude;
 		char ew;
-		ushort pdop, hdop, vdop, epe;
+		int pdop, hdop, vdop, epe;
 		// Get current current and voltage (unit is mA and mV)
 		gps.GetCoordinates(out latitude, out ns, out longitude, out ew, 
 		                   out pdop, out hdop, out vdop, out epe);
