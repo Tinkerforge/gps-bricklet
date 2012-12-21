@@ -38,7 +38,7 @@ int main() {
 	gps_set_coordinates_callback_period(&gps, 1000);
 
 	// Register coordinates callback to function cb_coordinates
-	gps_register_callback(&gps, GPS_CALLBACK_COORDINATES, cb_coordinates, NULL);
+	gps_register_callback(&gps, GPS_CALLBACK_COORDINATES, (void *)cb_coordinates, NULL);
 
 	printf("Press key to exit\n");
 	getchar();
