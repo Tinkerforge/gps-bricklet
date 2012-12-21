@@ -8,11 +8,11 @@ class Example
 
 	static void Main() 
 	{
-		IPConnection ipcon = new IPConnection(HOST, PORT); // Create connection to brickd
-		BrickletGPS gps = new BrickletGPS(UID); // Create device object
-		ipcon.AddDevice(gps); // Add device to ip connection
-		// Don't use device before it is added to a connection
+		IPConnection ipcon = new IPConnection(); // Create IP connection
+		BrickletGPS gps = new BrickletGPS(UID, ipcon); // Create device object
 
+		ipcon.Connect(HOST, PORT); // Connect to brickd
+		// Don't use device before ipcon is connected
 
 		uint latitude;
 		char ns;
@@ -26,7 +26,7 @@ class Example
 		System.Console.WriteLine("Latitude: " + latitude/1000000.0 + "° " + ns);
 		System.Console.WriteLine("Longitude: " + longitude/1000000.0 + "° " + ew);
 
-		System.Console.WriteLine("Press ctrl+c to exit");
-		ipcon.JoinThread();
+		System.Console.WriteLine("Press key to exit");
+		System.Console.ReadKey();
     }
 }

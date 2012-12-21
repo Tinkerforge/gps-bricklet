@@ -9,11 +9,11 @@ from tinkerforge.ip_connection import IPConnection
 from tinkerforge.bricklet_gps import GPS
 
 if __name__ == "__main__":
-    ipcon = IPConnection(HOST, PORT) # Create ip connection to brickd
+    ipcon = IPConnection() # Create IP connection
+    gps = GPS(UID, ipcon) # Create device object
 
-    gps = GPS(UID) # Create device object
-    ipcon.add_device(gps) # Add device to ip connection
-    # Don't use device before it is added to a connection
+    ipcon.connect(HOST, PORT) # Connect to brickd
+    # Don't use device before ipcon is connected
 
     # Get current current and voltage (unit is mA and mV)
     coords = gps.get_coordinates()

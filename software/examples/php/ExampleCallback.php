@@ -17,11 +17,11 @@ function cb_coordinates($latitude, $ns, $longitude, $ew, $pdop, $hdop, $vdop, $e
 	echo "Longitude: " . $longitude/1000000.0 . "° " . $ew . "\n";
 }
 
-$ipcon = new IPConnection($host, $port); // Create IP connection to brickd
-$vc = new BrickletGPS($uid); // Create device object
+$ipcon = new IPConnection(); // Create IP connection
+$vc = new BrickletGPS($uid, ipcon); // Create device object
 
-$ipcon->addDevice($vc); // Add device to IP connection
-// Don't use device before it is added to a connection
+$ipcon->connect($host, $port); // Connect to brickd
+// Don't use device before ipcon is connected
 
 // Set Period for coordinates callback to 1s (1000ms)
 // Note: The callback is only called every second if the 

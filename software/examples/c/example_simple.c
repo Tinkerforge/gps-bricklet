@@ -1,4 +1,3 @@
-
 #include <stdio.h>
 
 #include "ip_connection.h"
@@ -11,21 +10,18 @@
 int main() {
 	// Create ip connection to brickd
 	IPConnection ipcon;
-	if(ipcon_create(&ipcon, HOST, PORT) < 0) {
-		fprintf(stderr, "Could not create connection\n");
-		exit(1);
-	}
+	ipcon_create(&ipcon);
 
 	// Create device object
 	GPS gps;
-	gps_create(&gps, UID); 
+	gps_create(&gps, UID, &ipcon); 
 
-	// Add device to ip connection
-	if(ipcon_add_device(&ipcon, &gps) < 0) {
-		fprintf(stderr, "Could not connect to Brick\n");
+	// Connect to brickd
+	if(ipcon_connect(&ipcon, HOST, PORT) < 0) {
+		fprintf(stderr, "Could not connect\n");
 		exit(1);
 	}
-	// Don't use device before it is added to a connection
+	// Don't use device before ipcon is connected
 
 	// Get current coordinates
 	uint32_t ret_latitude;
@@ -46,6 +42,7 @@ int main() {
 	printf("Latitude: %f ° %c\n", ret_latitude/1000000.0, ret_ns);
 	printf("Longiutde: %f ° %c\n", ret_longitude/1000000.0, ret_ew);
 
-	printf("Press ctrl+c to close\n");
-	ipcon_join_thread(&ipcon); // Join mainloop of ip connection
+	printf("Press key to exit\n");
+	getchar();
+	ipcon_destroy(&ipcon);
 }

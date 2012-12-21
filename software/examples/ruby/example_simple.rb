@@ -10,10 +10,12 @@ HOST = 'localhost'
 PORT = 4223
 UID = 'ABC' # Change to your UID
 
-ipcon = IPConnection.new HOST, PORT # Create IP connection to brickd
-gps = BrickletGPS.new UID # Create device object
-ipcon.add_device gps # Add device to IP connection
-# Don't use device before it is added to a connection
+ipcon = IPConnection.new # Create IP connection
+gps = BrickletGPS.new UID, ipcon # Create device object
+
+ipcon.connect HOST, PORT # Connect to brickd
+# Don't use device before ipcon is connected
+
 
 # Get current coordinates
 coords = gps.get_coordinates
@@ -22,4 +24,3 @@ puts "Longitude: #{coords[2]/1000000.0} ° #{coords[3]}"
 
 puts 'Press key to exit'
 $stdin.gets
-ipcon.destroy

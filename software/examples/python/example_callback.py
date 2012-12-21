@@ -14,12 +14,12 @@ def cb_coordinates(latitude, ns, longitude, ew, pdop, hdop, vdop, epe):
     print('Longitude: ' + str(longitude/1000000.0) + '° ' + ew)
 
 if __name__ == "__main__":
-    ipcon = IPConnection(HOST, PORT) # Create ip connection to brickd
+    ipcon = IPConnection() # Create IP connection
+    gps = GPS(UID, ipcon) # Create device object
 
-    gps = GPS(UID) # Create device object
-    ipcon.add_device(gps) # Add device to ip connection
-    # Don't use device before it is added to a connection
-
+    ipcon.connect(HOST, PORT) # Connect to brickd
+    # Don't use device before ipcon is connected
+#
     # Set Period for coordinates callback to 1s (1000ms)
     # Note: The callback is only called every second if the 
     #       coordinates have changed since the last call!
@@ -29,4 +29,3 @@ if __name__ == "__main__":
     gps.register_callback(gps.CALLBACK_COORDINATES, cb_coordinates)
 
     raw_input('Press key to exit\n') # Use input() in Python 3
-    ipcon.destroy()
