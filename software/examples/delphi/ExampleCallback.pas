@@ -12,7 +12,8 @@ type
     ipcon: TIPConnection;
     gps: TBrickletGPS;
   public
-    procedure CoordinatesCB(const latitude: longword;
+    procedure CoordinatesCB(sender: TObject;
+	                        const latitude: longword;
                             const ns: char;
                             const longitude: longword;
                             const ew: char;
@@ -33,6 +34,7 @@ var
 
 { Callback function for coordinates callback }
 procedure TExample.CoordinatesCB(
+sender: TObject;
 const latitude: longword;
 const ns: char;
 const longitude: longword;
