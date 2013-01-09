@@ -7,7 +7,7 @@ class Example
 	private static string UID = "ABC"; // Change to your UID
 
 	// Callback function for coordinates callback
-	static void CoordinatesCB(object sender,
+	static void CoordinatesCB(BrickletGPS sender,
 	                          long latitude, char ns, long longitude, char ew, 
 	                          int pdop, int hdop, int vdop, int epe)
 	{
