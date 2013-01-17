@@ -22,7 +22,7 @@ public class ExampleCallback {
 		gps.setCoordinatesCallbackPeriod(1000);
 
 		// Add and implement coordinates listener (called if coordinates change)
-		gps.addListener(new BrickletGPS.CoordinatesListener() {
+		gps.addCoordinatesListener(new BrickletGPS.CoordinatesListener() {
 			public void coordinates(long latitude, char ns, long longitude, char ew,
 			                        int pdop, int hdop, int vdop, int epe) {
 				System.out.println("Latitude: " + latitude/1000000.0 + "° " + ns);
