@@ -39,10 +39,10 @@ int main() {
 		exit(1);
 	}
 
-	printf("Latitude: %f ° %c\n", ret_latitude/1000000.0, ret_ns);
-	printf("Longiutde: %f ° %c\n", ret_longitude/1000000.0, ret_ew);
+	printf("Latitude: %f° %c\n", ret_latitude/1000000.0, ret_ns);
+	printf("Longiutde: %f° %c\n", ret_longitude/1000000.0, ret_ew);
 
 	printf("Press key to exit\n");
 	getchar();
-	ipcon_destroy(&ipcon);
+	ipcon_destroy(&ipcon); // Calls ipcon_disconnect internally
 }

@@ -22,4 +22,4 @@ if __name__ == "__main__":
     print('Longitude: ' + str(coords.longitude/1000000.0) + '° ' + coords.ew)
 
     raw_input('Press key to exit\n') # Use input() in Python 3
-    ipcon.destroy()
+    ipcon.disconnect()

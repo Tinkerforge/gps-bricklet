@@ -34,5 +34,6 @@ class Example
 
 		System.Console.WriteLine("Press key to exit");
 		System.Console.ReadKey();
-    }
+		ipcon.Disconnect();
+	}
 }

@@ -15,8 +15,8 @@ void cb_coordinates(uint32_t latitude, char ns, uint32_t longitude, char ew,
 	(void)pdop; (void)hdop; (void)vdop; (void)epe;
 	(void)user_data;
 
-	printf("Latitude: %f ° %c\n", latitude/1000000.0, ns);
-	printf("Longiutde: %f ° %c\n", longitude/1000000.0, ew);
+	printf("Latitude: %f° %c\n", latitude/1000000.0, ns);
+	printf("Longiutde: %f° %c\n", longitude/1000000.0, ew);
 }
 
 int main() {
@@ -41,9 +41,10 @@ int main() {
 	gps_set_coordinates_callback_period(&gps, 1000);
 
 	// Register coordinates callback to function cb_coordinates
-	gps_register_callback(&gps, GPS_CALLBACK_COORDINATES, (void *)cb_coordinates, NULL);
+	gps_register_callback(&gps, GPS_CALLBACK_COORDINATES,
+	                      (void *)cb_coordinates, NULL);
 
 	printf("Press key to exit\n");
 	getchar();
-	ipcon_destroy(&ipcon);
+	ipcon_destroy(&ipcon); // Calls ipcon_disconnect internally
 }

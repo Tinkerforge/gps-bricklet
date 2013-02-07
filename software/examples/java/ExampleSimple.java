@@ -22,5 +22,6 @@ public class ExampleSimple {
 		System.out.println("Longitude: " + coords.longitude/1000000.0 + "° " + coords.ew);
 
 		System.console().readLine("Press key to exit\n");
+		ipcon.disconnect();
 	}
 }

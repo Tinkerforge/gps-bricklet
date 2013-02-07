@@ -43,15 +43,14 @@ begin
   ipcon.Connect(HOST, PORT);
   { Don't use device before ipcon is connected }
 
-
   { Get current coordinates }
   gps.GetCoordinates(latitude, ns, longitude, ew, pdop, hdop, vdop, epe);
-  WriteLn(Format('Latitude: %f ° %c', [latitude/1000000.0, ns]));
-  WriteLn(Format('Longitude: %f ° %c', [longitude/1000000.0, ew]));
+  WriteLn(Format('Latitude: %f° %c', [latitude/1000000.0, ns]));
+  WriteLn(Format('Longitude: %f° %c', [longitude/1000000.0, ew]));
 
   WriteLn('Press key to exit');
   ReadLn;
-  ipcon.Destroy;
+  ipcon.Destroy; { Calls ipcon.Disconnect internally }
 end;
 
 begin

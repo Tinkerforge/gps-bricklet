@@ -24,6 +24,6 @@ echo "Longitude: " . $coords['longitude']/1000000.0 . "° " . $coords['ew'] . "\
 
 echo "Press key to exit\n";
 fgetc(fopen('php://stdin', 'r'));
-$ipcon->destroy();
+$ipcon->disconnect();
 
 ?>

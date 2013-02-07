@@ -13,7 +13,7 @@ type
     gps: TBrickletGPS;
   public
     procedure CoordinatesCB(sender: TBrickletGPS;
-	                        const latitude: longword;
+                            const latitude: longword;
                             const ns: char;
                             const longitude: longword;
                             const ew: char;
@@ -45,8 +45,8 @@ const vdop: word;
 const epe: word
 );
 begin
-  WriteLn(Format('Latitude: %f ° %c', [latitude/1000000.0, ns]));
-  WriteLn(Format('Longitude: %f ° %c', [longitude/1000000.0, ew]));
+  WriteLn(Format('Latitude: %f° %c', [latitude/1000000.0, ns]));
+  WriteLn(Format('Longitude: %f° %c', [longitude/1000000.0, ew]));
 end;
 
 procedure TExample.Execute;
@@ -61,7 +61,6 @@ begin
   ipcon.Connect(HOST, PORT);
   { Don't use device before ipcon is connected }
 
-
   { Set Period for coordinates callback to 1s (1000ms)
     Note: The current callback is only called every second if the
           coordinates have changed since the last call! }
@@ -72,7 +71,7 @@ begin
 
   WriteLn('Press key to exit');
   ReadLn;
-  ipcon.Destroy;
+  ipcon.Destroy; { Calls ipcon.Disconnect internally }
 end;
 
 begin

@@ -29,3 +29,4 @@ if __name__ == "__main__":
     gps.register_callback(gps.CALLBACK_COORDINATES, cb_coordinates)
 
     raw_input('Press key to exit\n') # Use input() in Python 3
+    ipcon.disconnect()
