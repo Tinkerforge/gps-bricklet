@@ -11,7 +11,6 @@ class Example
 	                          long latitude, char ns, long longitude, char ew, 
 	                          int pdop, int hdop, int vdop, int epe)
 	{
-
 		System.Console.WriteLine("Latitude: " + latitude/1000000.0 + "° " + ns);
 		System.Console.WriteLine("Longitude: " + longitude/1000000.0 + "° " + ew);
 	}

@@ -5,7 +5,7 @@ public class ExampleCallback {
 	private static final String host = "localhost";
 	private static final int port = 4223;
 	private static final String UID = "ABC"; // Change to your UID
-	
+
 	// Note: To make the example code cleaner we do not handle exceptions. Exceptions you
 	//       might normally want to catch are described in the commnents below
 	public static void main(String args[]) throws Exception {
@@ -14,7 +14,6 @@ public class ExampleCallback {
 
 		ipcon.connect(host, port); // Connect to brickd
 		// Don't use device before ipcon is connected
-
 
 		// Set Period for coordinates callback to 1s (1000ms)
 		// Note: The current callback is only called every second if the 

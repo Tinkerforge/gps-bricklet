@@ -24,14 +24,7 @@ var
   e: TExample;
 
 procedure TExample.Execute;
-var latitude: longword;
-var ns: char;
-var longitude: longword;
-var ew: char;
-var pdop: word;
-var hdop: word;
-var vdop: word;
-var epe: word;
+var latitude, longitude: longword; ns, ew: char; pdop, hdop, vdop, epe: word;
 begin
   { Create IP connection }
   ipcon := TIPConnection.Create;

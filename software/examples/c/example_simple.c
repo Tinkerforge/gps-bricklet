@@ -24,14 +24,9 @@ int main() {
 	// Don't use device before ipcon is connected
 
 	// Get current coordinates
-	uint32_t ret_latitude;
-	char ret_ns;
-	uint32_t ret_longitude;
-	char ret_ew;
-	uint16_t ret_pdop;
-	uint16_t ret_hdop;
-	uint16_t ret_vdop;
-	uint16_t ret_epe;
+	uint32_t ret_latitude, ret_longitude;
+	char ret_ns, ret_ew;
+	uint16_t ret_pdop, ret_hdop, ret_vdop, ret_epe;
 	if(gps_get_coordinates(&gps, 
 	                       &ret_latitude, &ret_ns, &ret_longitude, &ret_ew, 
 	                       &ret_pdop, &ret_hdop, &ret_vdop, &ret_epe) < 0) {
