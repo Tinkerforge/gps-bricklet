@@ -28,7 +28,7 @@ $ipcon->connect($host, $port); // Connect to brickd
 //       coordinates have changed since the last call!
 $vc->setCoordinatesCallbackPeriod(1000);
 
-// Register current callback to function cb_coordinates
+// Register coordinates callback to function cb_coordinates
 $vc->registerCallback(BrickletGPS::CALLBACK_COORDINATES, 'cb_coordinates');
 
 echo "Press ctrl+c to exit\n";

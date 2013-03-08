@@ -21,7 +21,7 @@ ipcon.connect HOST, PORT # Connect to brickd
 #       coordinates have changed since the last call!
 gps.set_coordinates_callback_period 1000
 
-# Register current callback (parameter has unit mA)
+# Register coordinates callback
 gps.register_callback(BrickletGPS::CALLBACK_COORDINATES) do |latitude, ns, longitude, ew, pdop, hdop, vdop, epe|
   puts "Latitude: #{latitude/1000000.0}° #{ns}"
   puts "Longitude: #{longitude/1000000.0}° #{ew}"

@@ -25,7 +25,7 @@ if __name__ == "__main__":
     #       coordinates have changed since the last call!
     gps.set_coordinates_callback_period(1000)
 
-    # Register current callback to function cb_current
+    # Register coordinates callback to function cb_coordinates
     gps.register_callback(gps.CALLBACK_COORDINATES, cb_coordinates)
 
     raw_input('Press key to exit\n') # Use input() in Python 3
