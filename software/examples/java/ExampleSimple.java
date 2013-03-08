@@ -15,7 +15,7 @@ public class ExampleSimple {
 		ipcon.connect(host, port); // Connect to brickd
 		// Don't use device before ipcon is connected
 
-		// Get GPS coordinates
+		// Get current coordinates
 		BrickletGPS.Coordinates coords = gps.getCoordinates(); // Can throw com.tinkerforge.TimeoutException
 
 		System.out.println("Latitude: " + coords.latitude/1000000.0 + "° " + coords.ns);

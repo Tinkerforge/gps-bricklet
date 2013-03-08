@@ -15,7 +15,7 @@ if __name__ == "__main__":
     ipcon.connect(HOST, PORT) # Connect to brickd
     # Don't use device before ipcon is connected
 
-    # Get current current and voltage (unit is mA and mV)
+    # Get current coordinates
     coords = gps.get_coordinates()
 
     print('Latitude: ' + str(coords.latitude/1000000.0) + '° ' + coords.ns)
