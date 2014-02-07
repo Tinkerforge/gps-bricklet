@@ -1,0 +1,32 @@
+Needs["NETLink`"]
+LoadNETAssembly["Tinkerforge",NotebookDirectory[]<>"../../.."]
+
+host="localhost"
+port=4223
+uid="ABC"(* Change to your UID *)
+
+(* Create IPConnection and device object *)
+ipcon=NETNew["Tinkerforge.IPConnection"]
+gps=NETNew["Tinkerforge.BrickletGPS",uid,ipcon]
+ipcon@Connect[host,port]
+
+(* Set Period for coordinates callback to 1s (1000ms) *)
+(* Note: The coordinates callback is only called every second if the *)
+(*       coordinates has changed since the last call! *)
+gps@SetCoordinatesCallbackPeriod[1000]
+
+(* Callback function for coordinates callback *)
+CoordinatesCB[sender_,latitude_,ns_,longitude_,ew_,pdop_,hdop_,vdop_,epe_]:=
+ Module[{},
+  Print["Latitude: "<>ToString[N[Quantity[latitude,"°/1000000"]]]<>" "<>FromCharacterCode[ns]];
+  Print["Longitude: "<>ToString[N[Quantity[longitude,"°/1000000"]]]<>" "<>FromCharacterCode[ew]]
+ ]
+
+AddEventHandler[gps@Coordinates,CoordinatesCB]
+
+Input["Click OK to exit"]
+
+(* Clean up *)
+ipcon@Disconnect[]
+ReleaseNETObject[gps]
+ReleaseNETObject[ipcon]
