@@ -1,12 +1,11 @@
-var IPConnection = require('Tinkerforge/IPConnection');
-var BrickletGPS = require('Tinkerforge/BrickletGPS');
+var Tinkerforge = require('tinkerforge');
 
 var HOST = 'localhost';
 var PORT = 4223;
 var UID = 'ABC';// Change to your UID
 
-var ipcon = new IPConnection();// Create IP connection
-var gps = new BrickletGPS(UID, ipcon);// Create device object
+var ipcon = new Tinkerforge.IPConnection();// Create IP connection
+var gps = new Tinkerforge.BrickletGPS(UID, ipcon);// Create device object
 
 ipcon.connect(HOST, PORT,
     function(error) {
@@ -15,7 +14,7 @@ ipcon.connect(HOST, PORT,
 );// Connect to brickd
 
 // Don't use device before ipcon is connected
-ipcon.on(IPConnection.CALLBACK_CONNECTED,
+ipcon.on(Tinkerforge.IPConnection.CALLBACK_CONNECTED,
     function(connectReason) {
         // Set Period for coordinates callback to 1s (1000ms)
         // Note: The callback is only called every second if the 
@@ -25,7 +24,7 @@ ipcon.on(IPConnection.CALLBACK_CONNECTED,
 );
 
 // Register coordinates callback
-gps.on(BrickletGPS.CALLBACK_COORDINATES,
+gps.on(Tinkerforge.BrickletGPS.CALLBACK_COORDINATES,
     // Callback function for coordinates
     function(latitude, ns, longitude, ew) {
         console.log('Latitude: '+latitude/1000000+'° '+ns);
