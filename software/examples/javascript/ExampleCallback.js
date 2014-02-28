@@ -2,24 +2,24 @@ var Tinkerforge = require('tinkerforge');
 
 var HOST = 'localhost';
 var PORT = 4223;
-var UID = 'ABC';// Change to your UID
+var UID = 'ABC'; // Change to your UID
 
-var ipcon = new Tinkerforge.IPConnection();// Create IP connection
-var gps = new Tinkerforge.BrickletGPS(UID, ipcon);// Create device object
+var ipcon = new Tinkerforge.IPConnection(); // Create IP connection
+var gps = new Tinkerforge.BrickletGPS(UID, ipcon); // Create device object
 
 ipcon.connect(HOST, PORT,
     function(error) {
-        console.log('Error: '+error);        
+        console.log('Error: '+error);
     }
-);// Connect to brickd
-
+); // Connect to brickd
 // Don't use device before ipcon is connected
+
 ipcon.on(Tinkerforge.IPConnection.CALLBACK_CONNECTED,
     function(connectReason) {
         // Set Period for coordinates callback to 1s (1000ms)
-        // Note: The callback is only called every second if the 
+        // Note: The callback is only called every second if the
         // coordinates have changed since the last call!
-        gps.setCoordinatesCallbackPeriod(1000);      
+        gps.setCoordinatesCallbackPeriod(1000);
     }
 );
 
@@ -40,4 +40,3 @@ process.stdin.on('data',
         process.exit(0);
     }
 );
-
