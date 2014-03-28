@@ -3,7 +3,7 @@
 use Tinkerforge::IPConnection;
 use Tinkerforge::BrickletGPS;
 
-use constant HOST => '192.168.178.29';
+use constant HOST => 'localhost';
 use constant PORT => 4223;
 use constant UID => 'f9b'; # Change to your UID
 
