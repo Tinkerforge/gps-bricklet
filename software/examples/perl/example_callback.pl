@@ -15,8 +15,8 @@ sub cb_coordinates
 {
     my ($latitude, $ns, $longitude, $ew, $pdop, $hdop, $vdop, $epe) = @_;
 
-    print "\nLatitude: ".$latitude/1000000.0.'° '.$ns;
-    print "\nLongitude: ".$longitude/1000000.0.'° '.$ew."\n";
+    print "Latitude: ".$latitude/1000000.0.'° '.$ns."\n";
+    print "Longitude: ".$longitude/1000000.0.'° '.$ew."\n";
 }
 
 $ipcon->connect(&HOST, &PORT); # Connect to brickd
@@ -30,6 +30,6 @@ $gps->set_coordinates_callback_period(1000);
 # Register coordinates callback to function cb_coordinates
 $gps->register_callback($gps->CALLBACK_COORDINATES, 'cb_coordinates');
 
-print "\nPress any key to exit...\n";
+print "Press any key to exit...\n";
 <STDIN>;
 $ipcon->disconnect();
