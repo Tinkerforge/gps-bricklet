@@ -17,16 +17,16 @@ function octave_example_callback
     gps.setCoordinatesCallbackPeriod(1000);
 
     % Register coordinates callback to function cb_coordinates
-    gps.addCoordinatesListener("cb_coordinates");
+    gps.addCoordinatesCallback(@cb_coordinates);
 
-    input("\nPress any key to exit...\n", "s");
+    input("Press any key to exit...\n", "s");
     ipcon.disconnect();
 end
 
 % Callback function for coordinates
-function cb_coordinates(latitude, ns, longitude, ew, pdop, hdop, vdop, epe)
-    latitude = str2num(latitude.toString());
-    longitude = str2num(longitude.toString());
-    fprintf("Latitude: %g° %s\n", latitude/1000000, ns);
-    fprintf("Longitude: %g° %s\n", longitude/1000000, ew);
+function cb_coordinates(e)
+    latitude = str2num(e.latitude.toString());
+    longitude = str2num(e.longitude.toString());
+    fprintf("Latitude: %g° %s\n", latitude/1000000.0, e.ns);
+    fprintf("Longitude: %g° %s\n", longitude/1000000.0, e.ew);
 end

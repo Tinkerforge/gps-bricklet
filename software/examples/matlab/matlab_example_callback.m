@@ -18,14 +18,14 @@ function matlab_example_callback
     gps.setCoordinatesCallbackPeriod(1000);
 
     % Register coordinates callback to function cb_coordinates
-    set(gps, 'CoordinatesCallback', @(h, e)cb_coordinates(e.latitude, e.ns, e.longitude, e.ew, e.pdop, e.hdop, e.vdop, e.epe));
+    set(gps, 'CoordinatesCallback', @(h, e) cb_coordinates(e));
 
-    input('\nPress any key to exit...\n', 's');
+    input('Press any key to exit...\n', 's');
     ipcon.disconnect();
 end
 
 % Callback function for coordinates
-function cb_coordinates(latitude, ns, longitude, ew, pdop, hdop, vdop, epe)
-    fprintf('Latitude: %g° %s\n', latitude/1000000, ns);
-    fprintf('Longitude: %g° %s\n', longitude/1000000, ew);
+function cb_coordinates()
+    fprintf('Latitude: %g° %s\n', e.latitude/1000000.0, e.ns);
+    fprintf('Longitude: %g° %s\n', e.longitude/1000000.0, e.ew);
 end

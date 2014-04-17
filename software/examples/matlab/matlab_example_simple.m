@@ -14,12 +14,9 @@ function matlab_example_simple
 
     % Get current coordinates
     coords = gps.getCoordinates();
+    fprintf('Latitude: %g° %s\n', coords.latitude/1000000.0, coords.ns);
+    fprintf('Longitude: %g° %s\n', coords.longitude/1000000.0, coords.ew);
 
-    fprintf('Latitude: %g° %s\n', coords.latitude/1000000, coords.ns);
-    fprintf('Longitude: %g° %s\n', coords.longitude/1000000, coords.ew);
-
-    input('\nPress any key to exit...\n', 's');
+    input('Press any key to exit...\n', 's');
     ipcon.disconnect();
 end
-
-

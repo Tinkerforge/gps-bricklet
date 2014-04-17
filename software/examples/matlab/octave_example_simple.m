@@ -15,8 +15,9 @@ function octave_example_simple
     coords = gps.getCoordinates();
     latitude = str2num(coords.latitude.toString());
     longitude = str2num(coords.longitude.toString());
-    fprintf("Latitude: %g° %s\n", latitude/1000000, coords.ns);
-    fprintf("Longitude: %g° %s\n", longitude/1000000, coords.ew);
-    input("\nPress any key to exit...\n", "s");
+    fprintf("Latitude: %g° %s\n", latitude/1000000.0, coords.ns);
+    fprintf("Longitude: %g° %s\n", longitude/1000000.0, coords.ew);
+
+    input("Press any key to exit...\n", "s");
     ipcon.disconnect();
 end
