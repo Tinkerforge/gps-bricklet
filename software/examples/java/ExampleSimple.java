@@ -21,7 +21,7 @@ public class ExampleSimple {
 		System.out.println("Latitude: " + coords.latitude/1000000.0 + "° " + coords.ns);
 		System.out.println("Longitude: " + coords.longitude/1000000.0 + "° " + coords.ew);
 
-		System.console().readLine("Press key to exit\n");
+		System.out.println("Press key to exit"); System.in.read();
 		ipcon.disconnect();
 	}
 }
