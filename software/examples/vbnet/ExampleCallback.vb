@@ -31,7 +31,7 @@ Module ExampleCallback
         AddHandler gps.Coordinates, AddressOf CoordinatesCB
 
         System.Console.WriteLine("Press key to exit")
-        System.Console.ReadKey()
+        System.Console.ReadLine()
         ipcon.Disconnect()
     End Sub
 End Module

@@ -23,7 +23,7 @@ Module ExampleSimple
         System.Console.WriteLine("Longitude: " + (longitude/1000000.0).ToString() + "° " + ew)
 
         System.Console.WriteLine("Press key to exit")
-        System.Console.ReadKey()
+        System.Console.ReadLine()
         ipcon.Disconnect()
     End Sub
 End Module
