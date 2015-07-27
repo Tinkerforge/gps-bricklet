@@ -5,7 +5,7 @@
 
 #define HOST "localhost"
 #define PORT 4223
-#define UID "ABC" // Change to your UID
+#define UID "XYZ" // Change to your UID
 
 // Callback function for current callback (parameter has unit mA)
 void cb_coordinates(uint32_t latitude, char ns, uint32_t longitude, char ew,
@@ -19,13 +19,13 @@ void cb_coordinates(uint32_t latitude, char ns, uint32_t longitude, char ew,
 }
 
 int main() {
-	// Create ip connection to brickd
+	// Create IP connection
 	IPConnection ipcon;
 	ipcon_create(&ipcon);
 
 	// Create device object
 	GPS gps;
-	gps_create(&gps, UID, &ipcon); 
+	gps_create(&gps, UID, &ipcon);
 
 	// Connect to brickd
 	if(ipcon_connect(&ipcon, HOST, PORT) < 0) {

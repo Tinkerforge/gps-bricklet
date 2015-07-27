@@ -4,7 +4,7 @@ class Example
 {
 	private static string HOST = "localhost";
 	private static int PORT = 4223;
-	private static string UID = "ABC"; // Change to your UID
+	private static string UID = "XYZ"; // Change to your UID
 
 	// Callback function for coordinates callback
 	static void CoordinatesCB(BrickletGPS sender,
@@ -15,7 +15,7 @@ class Example
 		System.Console.WriteLine("Longitude: " + longitude/1000000.0 + "° " + ew);
 	}
 
-	static void Main() 
+	static void Main()
 	{
 		IPConnection ipcon = new IPConnection(); // Create IP connection
 		BrickletGPS gps = new BrickletGPS(UID, ipcon); // Create device object
