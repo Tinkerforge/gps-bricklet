@@ -1,2 +1,5 @@
-1.0.0: Initial version
-2.0.0: Support for protocol 2.0
+1.0.0:
+- Initial version
+
+2.0.0:
+- Support for Protocol 2.0
