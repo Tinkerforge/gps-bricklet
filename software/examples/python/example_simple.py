@@ -6,11 +6,11 @@ PORT = 4223
 UID = "XYZ" # Change to your UID
 
 from tinkerforge.ip_connection import IPConnection
-from tinkerforge.bricklet_gps import GPS
+from tinkerforge.bricklet_gps import BrickletGPS
 
 if __name__ == "__main__":
     ipcon = IPConnection() # Create IP connection
-    gps = GPS(UID, ipcon) # Create device object
+    gps = BrickletGPS(UID, ipcon) # Create device object
 
     ipcon.connect(HOST, PORT) # Connect to brickd
     # Don't use device before ipcon is connected
