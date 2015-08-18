@@ -3,7 +3,7 @@ Imports Tinkerforge
 Module ExampleCallback
     Const HOST As String = "localhost"
     Const PORT As Integer = 4223
-    Const UID As String = "cYj" ' Change to your UID
+    Const UID As String = "XYZ" ' Change to your UID
 
     ' Callback function for coordinates callback
     Sub CoordinatesCB(ByVal sender As BrickletGPS, _
