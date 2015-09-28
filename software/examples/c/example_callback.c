@@ -7,7 +7,7 @@
 #define PORT 4223
 #define UID "XYZ" // Change to your UID
 
-// Callback function for current callback (parameter has unit mA)
+// Callback function for coordinates callback
 void cb_coordinates(uint32_t latitude, char ns, uint32_t longitude, char ew,
                     uint16_t pdop, uint16_t hdop, uint16_t vdop, uint16_t epe, 
                     void *user_data) {
@@ -16,6 +16,7 @@ void cb_coordinates(uint32_t latitude, char ns, uint32_t longitude, char ew,
 
 	printf("Latitude: %f° %c\n", latitude/1000000.0, ns);
 	printf("Longiutde: %f° %c\n", longitude/1000000.0, ew);
+	printf("\n");
 }
 
 int main(void) {
@@ -34,14 +35,16 @@ int main(void) {
 	}
 	// Don't use device before ipcon is connected
 
-	// Set Period for coordinates callback to 1s (1000ms)
-	// Note: The callback is only called every second if the 
-	//       coordinates have changed since the last call!
-	gps_set_coordinates_callback_period(&gps, 1000);
-
 	// Register coordinates callback to function cb_coordinates
-	gps_register_callback(&gps, GPS_CALLBACK_COORDINATES,
-	                      (void *)cb_coordinates, NULL);
+	gps_register_callback(&gps,
+	                      GPS_CALLBACK_COORDINATES,
+	                      (void *)cb_coordinates,
+	                      NULL);
+
+	// Set period for coordinates callback to 1s (1000ms)
+	// Note: The coordinates callback is only called every second
+	//       if the coordinates has changed since the last call!
+	gps_set_coordinates_callback_period(&gps, 1000);
 
 	printf("Press key to exit\n");
 	getchar();

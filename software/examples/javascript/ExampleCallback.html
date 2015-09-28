@@ -34,25 +34,26 @@
                 var gps = new Tinkerforge.BrickletGPS(UID, ipcon); // Create device object
                 ipcon.connect(HOST, PORT,
                     function(error) {
-                        textArea.value += 'Error: '+error+ '\n';
+                        textArea.value += 'Error: ' + error + '\n';
                     }
                 ); // Connect to brickd
                 // Don't use device before ipcon is connected
 
                 ipcon.on(Tinkerforge.IPConnection.CALLBACK_CONNECTED,
-                    function(connectReason) {
-                        // Set Period for coordinates callback to 1s (1000ms)
-                        // Note: The callback is only called every second if the
-                        // coordinates have changed since the last call!
+                    function (connectReason) {
+                        // Set period for coordinates callback to 1s (1000ms)
+                        // Note: The coordinates callback is only called every second
+                        //       if the coordinates has changed since the last call!
                         gps.setCoordinatesCallbackPeriod(1000);
                     }
                 );
                 // Register coordinates callback
                 gps.on(Tinkerforge.BrickletGPS.CALLBACK_COORDINATES,
-                    // Callback function for coordinates
-                    function(latitude, ns, longitude, ew) {
-                        textArea.value += 'Latitude: '+latitude/1000000+'° '+ns+'\n';
-                        textArea.value += 'Longitude: '+longitude/1000000+'° '+ew+'\n';
+                    // Callback function for coordinates callback
+                    function (latitude, ns, longitude, ew, pdop, hdop, vdop, epe) {
+                        textArea.value += 'Latitude: ' + latitude/1000000.0 + '° ' + ns + '\n';
+                        textArea.value += 'Longitude: ' + longitude/1000000.0 + '° ' + ew + '\n';
+                        textArea.value += '\n';
                         textArea.scrollTop = textArea.scrollHeight;
                     }
                 );

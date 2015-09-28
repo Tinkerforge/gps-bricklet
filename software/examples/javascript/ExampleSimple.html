@@ -34,21 +34,21 @@
                 var gps = new Tinkerforge.BrickletGPS(UID, ipcon); // Create device object
                 ipcon.connect(HOST, PORT,
                     function(error) {
-                        textArea.value += 'Error: '+error+ '\n';
+                        textArea.value += 'Error: ' + error + '\n';
                     }
                 ); // Connect to brickd
                 // Don't use device before ipcon is connected
 
                 ipcon.on(Tinkerforge.IPConnection.CALLBACK_CONNECTED,
-                    function(connectReason) {
+                    function (connectReason) {
                         // Get current coordinates
                         gps.getCoordinates(
-                            function(latitude, ns, longitude, ew) {
-                                textArea.value += 'Latitude: '+latitude/1000000+'° '+ns+'\n';
-                                textArea.value += 'Longitude: '+longitude/1000000+'° '+ew+'\n';
+                            function (latitude, ns, longitude, ew, pdop, hdop, vdop, epe) {
+                                textArea.value += 'Latitude: ' + latitude/1000000.0 + '° ' + ns + '\n';
+                                textArea.value += 'Longitude: ' + longitude/1000000.0 + '° ' + ew + '\n';
                             },
-                            function(error) {
-                                textArea.value += 'Error: '+error+'\n';
+                            function (error) {
+                                textArea.value += 'Error: ' + error + '\n';
                             }
                         );
                     }

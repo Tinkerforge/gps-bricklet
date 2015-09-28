@@ -1,3 +1,4 @@
+using System;
 using Tinkerforge;
 
 class Example
@@ -14,19 +15,18 @@ class Example
 		ipcon.Connect(HOST, PORT); // Connect to brickd
 		// Don't use device before ipcon is connected
 
+		// Get current coordinates
 		long latitude, longitude;
 		char ns, ew;
 		int pdop, hdop, vdop, epe;
-
-		// Get current coordinates
-		gps.GetCoordinates(out latitude, out ns, out longitude, out ew, 
+		gps.GetCoordinates(out latitude, out ns, out longitude, out ew,
 		                   out pdop, out hdop, out vdop, out epe);
 
-		System.Console.WriteLine("Latitude: " + latitude/1000000.0 + "° " + ns);
-		System.Console.WriteLine("Longitude: " + longitude/1000000.0 + "° " + ew);
+		Console.WriteLine("Latitude: " + latitude/1000000.0 + "° " + ns);
+		Console.WriteLine("Longitude: " + longitude/1000000.0 + "° " + ew);
 
-		System.Console.WriteLine("Press enter to exit");
-		System.Console.ReadLine();
+		Console.WriteLine("Press enter to exit");
+		Console.ReadLine();
 		ipcon.Disconnect();
 	}
 }

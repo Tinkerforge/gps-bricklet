@@ -15,9 +15,10 @@ $ipcon->connect(&HOST, &PORT); # Connect to brickd
 
 # Get current coordinates
 my ($latitude, $ns, $longitude, $ew, $pdop, $hdop, $vdop, $epe) = $gps->get_coordinates();
-print "Latitude: ".$latitude/1000000.0.'° '.$ns."\n";
-print "Longitude: ".$longitude/1000000.0.'° '.$ew."\n";
 
-print "Press any key to exit...\n";
+print "Latitude: " . $latitude/1000000.0 . "° $ns\n";
+print "Longitude: " . $longitude/1000000.0 . "° $ew\n";
+
+print "Press key to exit\n";
 <STDIN>;
 $ipcon->disconnect();

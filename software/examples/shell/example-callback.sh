@@ -1,13 +1,16 @@
 #!/bin/sh
-# connects to localhost:4223 by default, use --host and --port to change it
+# Connects to localhost:4223 by default, use --host and --port to change this
 
-# change to your UID
-uid=XYZ
+uid=XYZ # Change to your UID
 
-# set period for coordinates callback to 1s (1000ms)
-# note: the coordinates callback is only called every second if the
-#       coordinates have changed since the last call!
+# Handle incoming coordinates callbacks
+tinkerforge dispatch gps-bricklet $uid coordinates &
+
+# Set period for coordinates callback to 1s (1000ms)
+# Note: The coordinates callback is only called every second
+#       if the coordinates has changed since the last call!
 tinkerforge call gps-bricklet $uid set-coordinates-callback-period 1000
 
-# handle incoming coordinates callbacks
-tinkerforge dispatch gps-bricklet $uid coordinates
+echo "Press key to exit"; read dummy
+
+kill -- -$$ # Stop callback dispatch in background

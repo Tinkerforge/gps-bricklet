@@ -24,7 +24,7 @@ var
   e: TExample;
 
 procedure TExample.Execute;
-var latitude, longitude: longword; ns, ew: char; pdop, hdop, vdop, epe: word;
+var latitude: longword; ns: char; longitude: longword; ew: char; pdop, hdop, vdop, epe: word;
 begin
   { Create IP connection }
   ipcon := TIPConnection.Create;
@@ -38,6 +38,7 @@ begin
 
   { Get current coordinates }
   gps.GetCoordinates(latitude, ns, longitude, ew, pdop, hdop, vdop, epe);
+
   WriteLn(Format('Latitude: %f° %c', [latitude/1000000.0, ns]));
   WriteLn(Format('Longitude: %f° %c', [longitude/1000000.0, ew]));
 

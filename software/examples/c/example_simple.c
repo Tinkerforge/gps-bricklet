@@ -24,18 +24,17 @@ int main(void) {
 	// Don't use device before ipcon is connected
 
 	// Get current coordinates
-	uint32_t ret_latitude, ret_longitude;
-	char ret_ns, ret_ew;
-	uint16_t ret_pdop, ret_hdop, ret_vdop, ret_epe;
-	if(gps_get_coordinates(&gps, 
-	                       &ret_latitude, &ret_ns, &ret_longitude, &ret_ew, 
-	                       &ret_pdop, &ret_hdop, &ret_vdop, &ret_epe) < 0) {
-		fprintf(stderr, "Could not get value, probably timeout\n");
+	uint32_t latitude, longitude;
+	char ns, ew;
+	uint16_t pdop, hdop, vdop, epe;
+	if(gps_get_coordinates(&gps, &latitude, &ns, &longitude, &ew,
+	                       &pdop, &hdop, &vdop, &epe) < 0) {
+		fprintf(stderr, "Could not get coordinates, probably timeout\n");
 		return 1;
 	}
 
-	printf("Latitude: %f° %c\n", ret_latitude/1000000.0, ret_ns);
-	printf("Longiutde: %f° %c\n", ret_longitude/1000000.0, ret_ew);
+	printf("Latitude: %f° %c\n", latitude/1000000.0, ns);
+	printf("Longiutde: %f° %c\n", longitude/1000000.0, ew);
 
 	printf("Press key to exit\n");
 	getchar();

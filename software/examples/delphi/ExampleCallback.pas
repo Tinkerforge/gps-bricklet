@@ -13,13 +13,9 @@ type
     gps: TBrickletGPS;
   public
     procedure CoordinatesCB(sender: TBrickletGPS;
-                            const latitude: longword;
-                            const ns: char;
-                            const longitude: longword;
-                            const ew: char;
-                            const pdop: word;
-                            const hdop: word;
-                            const vdop: word;
+                            const latitude: longword; const ns: char;
+                            const longitude: longword; const ew: char;
+                            const pdop: word; const hdop: word; const vdop: word;
                             const epe: word);
     procedure Execute;
   end;
@@ -32,21 +28,16 @@ const
 var
   e: TExample;
 
-{ Callback function for coordinates callback }
-procedure TExample.CoordinatesCB(
-sender: TBrickletGPS;
-const latitude: longword;
-const ns: char;
-const longitude: longword;
-const ew: char;
-const pdop: word;
-const hdop: word;
-const vdop: word;
-const epe: word
-);
+{ Callback procedure for coordinates callback }
+procedure TExample.CoordinatesCB(sender: TBrickletGPS;
+                                 const latitude: longword; const ns: char;
+                                 const longitude: longword; const ew: char;
+                                 const pdop: word; const hdop: word; const vdop: word;
+                                 const epe: word);
 begin
   WriteLn(Format('Latitude: %f° %c', [latitude/1000000.0, ns]));
   WriteLn(Format('Longitude: %f° %c', [longitude/1000000.0, ew]));
+  WriteLn('');
 end;
 
 procedure TExample.Execute;
@@ -61,13 +52,13 @@ begin
   ipcon.Connect(HOST, PORT);
   { Don't use device before ipcon is connected }
 
-  { Set Period for coordinates callback to 1s (1000ms)
-    Note: The current callback is only called every second if the
-          coordinates have changed since the last call! }
-  gps.SetCoordinatesCallbackPeriod(1000);
-
   { Register coordinates callback to procedure CoordinatesCB }
   gps.OnCoordinates := {$ifdef FPC}@{$endif}CoordinatesCB;
+
+  { Set period for coordinates callback to 1s (1000ms)
+    Note: The coordinates callback is only called every second
+          if the coordinates has changed since the last call! }
+  gps.SetCoordinatesCallbackPeriod(1000);
 
   WriteLn('Press key to exit');
   ReadLn;

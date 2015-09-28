@@ -1,3 +1,4 @@
+Imports System
 Imports Tinkerforge
 
 Module ExampleSimple
@@ -12,18 +13,18 @@ Module ExampleSimple
         ipcon.Connect(HOST, PORT) ' Connect to brickd
         ' Don't use device before ipcon is connected
 
+        ' Get current coordinates
         Dim latitude, longitude As Long
         Dim ns, ew As Char
         Dim pdop, hdop, vdop, epe As Integer
 
-        ' Get current coordinates
         gps.GetCoordinates(latitude, ns, longitude, ew, pdop, hdop, vdop, epe)
 
-        System.Console.WriteLine("Latitude: " + (latitude/1000000.0).ToString() + "° " + ns)
-        System.Console.WriteLine("Longitude: " + (longitude/1000000.0).ToString() + "° " + ew)
+        Console.WriteLine("Latitude: " + (latitude/1000000.0).ToString() + "° " + ns)
+        Console.WriteLine("Longitude: " + (longitude/1000000.0).ToString() + "° " + ew)
 
-        System.Console.WriteLine("Press key to exit")
-        System.Console.ReadLine()
+        Console.WriteLine("Press key to exit")
+        Console.ReadLine()
         ipcon.Disconnect()
     End Sub
 End Module

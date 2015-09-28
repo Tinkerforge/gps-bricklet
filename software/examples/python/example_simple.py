@@ -16,10 +16,10 @@ if __name__ == "__main__":
     # Don't use device before ipcon is connected
 
     # Get current coordinates
-    coords = gps.get_coordinates()
+    latitude, ns, longitude, ew, pdop, hdop, vdop, epe = gps.get_coordinates()
 
-    print('Latitude: ' + str(coords.latitude/1000000.0) + '° ' + coords.ns)
-    print('Longitude: ' + str(coords.longitude/1000000.0) + '° ' + coords.ew)
+    print("Latitude: " + str(latitude/1000000.0) + "° " + ns)
+    print("Longitude: " + str(longitude/1000000.0) + "° " + ew)
 
-    raw_input('Press key to exit\n') # Use input() in Python 3
+    raw_input("Press key to exit\n") # Use input() in Python 3
     ipcon.disconnect()
