@@ -58,8 +58,8 @@ typedef struct {
 	uint8_t ew;
 	uint8_t fix_type;
 	uint8_t fix_mode;
-	uint32_t altitude;
-	uint32_t geoidal_separation;
+	int32_t altitude;
+	int32_t geoidal_separation;
 	uint32_t course;
 	uint32_t speed;
 	uint8_t satellites_view;
@@ -82,8 +82,8 @@ typedef struct {
 	uint8_t ew;
 	uint8_t fix_type;
 	uint8_t fix_mode;
-	uint32_t altitude;
-	uint32_t geoidal_separation;
+	int32_t altitude;
+	int32_t geoidal_separation;
 	uint32_t course;
 	uint32_t speed;
 	uint8_t satellites_view;

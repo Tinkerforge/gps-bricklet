@@ -84,8 +84,8 @@ typedef struct {
 
 typedef struct {
 	MessageHeader header;
-	uint32_t altitude;
-	uint32_t geoidal_separation;
+	int32_t altitude;
+	int32_t geoidal_separation;
 } __attribute__((__packed__)) GetAltitudeReturn;
 
 typedef struct {
@@ -204,8 +204,8 @@ typedef struct {
 
 typedef struct {
 	MessageHeader header;
-	uint32_t altitude;
-	uint32_t geoidal_separation;
+	int32_t altitude;
+	int32_t geoidal_separation;
 } __attribute__((__packed__)) Altitude;
 
 typedef struct {
