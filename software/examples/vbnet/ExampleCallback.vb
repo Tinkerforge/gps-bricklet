@@ -4,14 +4,13 @@ Imports Tinkerforge
 Module ExampleCallback
     Const HOST As String = "localhost"
     Const PORT As Integer = 4223
-    Const UID As String = "XYZ" ' Change to your UID
+    Const UID As String = "XYZ" ' Change XYZ to the UID of your GPS Bricklet
 
     ' Callback subroutine for coordinates callback
-    Sub CoordinatesCB(ByVal sender As BrickletGPS, _
-                      ByVal latitude As Long, ByVal ns As Char, _
-                      ByVal longitude As Long, ByVal ew As Char, _
-                      ByVal pdop As Integer, ByVal hdop As Integer, ByVal vdop As Integer, _
-                      ByVal epe As Integer)
+    Sub CoordinatesCB(ByVal sender As BrickletGPS, ByVal latitude As Long, _
+                      ByVal ns As Char, ByVal longitude As Long, ByVal ew As Char, _
+                      ByVal pdop As Integer, ByVal hdop As Integer, _
+                      ByVal vdop As Integer, ByVal epe As Integer)
         Console.WriteLine("Latitude: " + (latitude/1000000.0).ToString() + "° " + ns)
         Console.WriteLine("Longitude: " + (longitude/1000000.0).ToString() + "° " + ew)
         Console.WriteLine("")

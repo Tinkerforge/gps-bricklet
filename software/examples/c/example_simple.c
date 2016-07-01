@@ -5,7 +5,7 @@
 
 #define HOST "localhost"
 #define PORT 4223
-#define UID "XYZ" // Change to your UID
+#define UID "XYZ" // Change XYZ to the UID of your GPS Bricklet
 
 int main(void) {
 	// Create IP connection
@@ -24,11 +24,9 @@ int main(void) {
 	// Don't use device before ipcon is connected
 
 	// Get current coordinates
-	uint32_t latitude, longitude;
-	char ns, ew;
-	uint16_t pdop, hdop, vdop, epe;
-	if(gps_get_coordinates(&gps, &latitude, &ns, &longitude, &ew,
-	                       &pdop, &hdop, &vdop, &epe) < 0) {
+	uint32_t latitude; char ns; uint32_t longitude; char ew; uint16_t pdop, hdop, vdop, epe;
+	if(gps_get_coordinates(&gps, &latitude, &ns, &longitude, &ew, &pdop, &hdop, &vdop,
+	                       &epe) < 0) {
 		fprintf(stderr, "Could not get coordinates, probably timeout\n");
 		return 1;
 	}

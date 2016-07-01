@@ -12,9 +12,8 @@ type
     ipcon: TIPConnection;
     gps: TBrickletGPS;
   public
-    procedure CoordinatesCB(sender: TBrickletGPS;
-                            const latitude: longword; const ns: char;
-                            const longitude: longword; const ew: char;
+    procedure CoordinatesCB(sender: TBrickletGPS; const latitude: longword;
+                            const ns: char; const longitude: longword; const ew: char;
                             const pdop: word; const hdop: word; const vdop: word;
                             const epe: word);
     procedure Execute;
@@ -23,17 +22,16 @@ type
 const
   HOST = 'localhost';
   PORT = 4223;
-  UID = 'XYZ'; { Change to your UID }
+  UID = 'XYZ'; { Change XYZ to the UID of your GPS Bricklet }
 
 var
   e: TExample;
 
 { Callback procedure for coordinates callback }
-procedure TExample.CoordinatesCB(sender: TBrickletGPS;
-                                 const latitude: longword; const ns: char;
-                                 const longitude: longword; const ew: char;
-                                 const pdop: word; const hdop: word; const vdop: word;
-                                 const epe: word);
+procedure TExample.CoordinatesCB(sender: TBrickletGPS; const latitude: longword;
+                                 const ns: char; const longitude: longword;
+                                 const ew: char; const pdop: word; const hdop: word;
+                                 const vdop: word; const epe: word);
 begin
   WriteLn(Format('Latitude: %f° %c', [latitude/1000000.0, ns]));
   WriteLn(Format('Longitude: %f° %c', [longitude/1000000.0, ew]));

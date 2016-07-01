@@ -5,7 +5,7 @@ class Example
 {
 	private static string HOST = "localhost";
 	private static int PORT = 4223;
-	private static string UID = "XYZ"; // Change to your UID
+	private static string UID = "XYZ"; // Change XYZ to the UID of your GPS Bricklet
 
 	static void Main()
 	{
@@ -16,11 +16,9 @@ class Example
 		// Don't use device before ipcon is connected
 
 		// Get current coordinates
-		long latitude, longitude;
-		char ns, ew;
-		int pdop, hdop, vdop, epe;
-		gps.GetCoordinates(out latitude, out ns, out longitude, out ew,
-		                   out pdop, out hdop, out vdop, out epe);
+		long latitude; char ns; long longitude; char ew; int pdop, hdop, vdop, epe;
+		gps.GetCoordinates(out latitude, out ns, out longitude, out ew, out pdop,
+		                   out hdop, out vdop, out epe);
 
 		Console.WriteLine("Latitude: " + latitude/1000000.0 + "° " + ns);
 		Console.WriteLine("Longitude: " + longitude/1000000.0 + "° " + ew);

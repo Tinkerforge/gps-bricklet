@@ -5,7 +5,7 @@ use Tinkerforge::BrickletGPS;
 
 use constant HOST => 'localhost';
 use constant PORT => 4223;
-use constant UID => 'XYZ'; # Change to your UID
+use constant UID => 'XYZ'; # Change XYZ to the UID of your GPS Bricklet
 
 # Callback subroutine for coordinates callback
 sub cb_coordinates

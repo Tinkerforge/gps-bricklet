@@ -5,11 +5,11 @@
 
 #define HOST "localhost"
 #define PORT 4223
-#define UID "XYZ" // Change to your UID
+#define UID "XYZ" // Change XYZ to the UID of your GPS Bricklet
 
 // Callback function for coordinates callback
 void cb_coordinates(uint32_t latitude, char ns, uint32_t longitude, char ew,
-                    uint16_t pdop, uint16_t hdop, uint16_t vdop, uint16_t epe, 
+                    uint16_t pdop, uint16_t hdop, uint16_t vdop, uint16_t epe,
                     void *user_data) {
 	(void)pdop; (void)hdop; (void)vdop; (void)epe;
 	(void)user_data;

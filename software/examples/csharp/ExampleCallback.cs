@@ -5,12 +5,11 @@ class Example
 {
 	private static string HOST = "localhost";
 	private static int PORT = 4223;
-	private static string UID = "XYZ"; // Change to your UID
+	private static string UID = "XYZ"; // Change XYZ to the UID of your GPS Bricklet
 
 	// Callback function for coordinates callback
-	static void CoordinatesCB(BrickletGPS sender,
-	                          long latitude, char ns, long longitude, char ew, 
-	                          int pdop, int hdop, int vdop, int epe)
+	static void CoordinatesCB(BrickletGPS sender, long latitude, char ns, long longitude,
+	                          char ew, int pdop, int hdop, int vdop, int epe)
 	{
 		Console.WriteLine("Latitude: " + latitude/1000000.0 + "° " + ns);
 		Console.WriteLine("Longitude: " + longitude/1000000.0 + "° " + ew);
