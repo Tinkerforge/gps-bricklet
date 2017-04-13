@@ -25,7 +25,7 @@ class Example
 		// Don't use device before ipcon is connected
 
 		// Register coordinates callback to function CoordinatesCB
-		gps.Coordinates += CoordinatesCB;
+		gps.CoordinatesCallback += CoordinatesCB;
 
 		// Set period for coordinates callback to 1s (1000ms)
 		// Note: The coordinates callback is only called every second
