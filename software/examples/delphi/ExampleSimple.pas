@@ -39,8 +39,8 @@ begin
   { Get current coordinates }
   gps.GetCoordinates(latitude, ns, longitude, ew, pdop, hdop, vdop, epe);
 
-  WriteLn(Format('Latitude: %f° %c', [latitude/1000000.0, ns]));
-  WriteLn(Format('Longitude: %f° %c', [longitude/1000000.0, ew]));
+  WriteLn(Format('Latitude: %.6f° %s', [latitude/1000000.0, ns]));
+  WriteLn(Format('Longitude: %.6f° %s', [longitude/1000000.0, ew]));
 
   WriteLn('Press key to exit');
   ReadLn;
