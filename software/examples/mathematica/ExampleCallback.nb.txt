@@ -17,7 +17,7 @@ CoordinatesCB[sender_,latitude_,ns_,longitude_,ew_,pdop_,hdop_,vdop_,epe_]:=
   Print["Longitude: "<>ToString[N[Quantity[longitude,"°/1000000"]]]<>" "<>FromCharacterCode[ew]]
  ]
 
-AddEventHandler[gps@Coordinates,CoordinatesCB]
+AddEventHandler[gps@CoordinatesCallback,CoordinatesCB]
 
 (*Set period for coordinates callback to 1s (1000ms)*)
 (*Note: The coordinates callback is only called every second*)

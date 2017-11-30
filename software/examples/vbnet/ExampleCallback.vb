@@ -24,7 +24,7 @@ Module ExampleCallback
         ' Don't use device before ipcon is connected
 
         ' Register coordinates callback to subroutine CoordinatesCB
-        AddHandler gps.Coordinates, AddressOf CoordinatesCB
+        AddHandler gps.CoordinatesCallback, AddressOf CoordinatesCB
 
         ' Set period for coordinates callback to 1s (1000ms)
         ' Note: The coordinates callback is only called every second
