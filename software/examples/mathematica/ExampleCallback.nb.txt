@@ -13,8 +13,10 @@ ipcon@Connect[host,port]
 (*Callback function for coordinates callback*)
 CoordinatesCB[sender_,latitude_,ns_,longitude_,ew_,pdop_,hdop_,vdop_,epe_]:=
  Module[{},
-  Print["Latitude: "<>ToString[N[Quantity[latitude,"°/1000000"]]]<>" "<>FromCharacterCode[ns]];
-  Print["Longitude: "<>ToString[N[Quantity[longitude,"°/1000000"]]]<>" "<>FromCharacterCode[ew]]
+  Print["Latitude: "<>ToString[N[Quantity[latitude,"°/1000000"]]]];
+  Print["N/S: "<>FromCharacterCode[ns]];
+  Print["Longitude: "<>ToString[N[Quantity[longitude,"°/1000000"]]]];
+  Print["E/W: "<>FromCharacterCode[ew]]
  ]
 
 AddEventHandler[gps@CoordinatesCallback,CoordinatesCB]

@@ -27,8 +27,10 @@ ipcon.on(Tinkerforge.IPConnection.CALLBACK_CONNECTED,
 gps.on(Tinkerforge.BrickletGPS.CALLBACK_COORDINATES,
     // Callback function for coordinates callback
     function (latitude, ns, longitude, ew, pdop, hdop, vdop, epe) {
-        console.log('Latitude: ' + latitude/1000000.0 + '° ' + ns);
-        console.log('Longitude: ' + longitude/1000000.0 + '° ' + ew);
+        console.log('Latitude: ' + latitude/1000000.0 + ' °');
+        console.log('N/S: ' + ns);
+        console.log('Longitude: ' + longitude/1000000.0 + ' °');
+        console.log('E/W: ' + ew);
         console.log();
     }
 );

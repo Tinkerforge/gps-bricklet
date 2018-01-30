@@ -21,8 +21,10 @@ public class ExampleSimple {
 		// Get current coordinates
 		Coordinates coordinates = gps.getCoordinates(); // Can throw com.tinkerforge.TimeoutException
 
-		System.out.println("Latitude: " + coordinates.latitude/1000000.0 + "° " + coordinates.ns);
-		System.out.println("Longitude: " + coordinates.longitude/1000000.0 + "° " + coordinates.ew);
+		System.out.println("Latitude: " + coordinates.latitude/1000000.0 + " °");
+		System.out.println("N/S: " + coordinates.ns);
+		System.out.println("Longitude: " + coordinates.longitude/1000000.0 + " °");
+		System.out.println("E/W: " + coordinates.ew);
 
 		System.out.println("Press key to exit"); System.in.read();
 		ipcon.disconnect();

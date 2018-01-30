@@ -15,8 +15,10 @@ latitude=0;ns=0;longitude=0;ew=0;pdop=0;hdop=0;vdop=0;epe=0
 (*Get current coordinates*)
 gps@GetCoordinates[latitude,ns,longitude,ew,pdop,hdop,vdop,epe]
 
-Print["Latitude: "<>ToString[N[Quantity[latitude,"°/1000000"]]]<>" "<>FromCharacterCode[ns]]
-Print["Longitude: "<>ToString[N[Quantity[longitude,"°/1000000"]]]<>" "<>FromCharacterCode[ew]]
+Print["Latitude: "<>ToString[N[Quantity[latitude,"°/1000000"]]]]
+Print["N/S: "<>FromCharacterCode[ns]]
+Print["Longitude: "<>ToString[N[Quantity[longitude,"°/1000000"]]]]
+Print["E/W: "<>FromCharacterCode[ew]]
 
 (*Clean up*)
 ipcon@Disconnect[]

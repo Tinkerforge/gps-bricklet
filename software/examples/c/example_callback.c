@@ -12,10 +12,12 @@ void cb_coordinates(uint32_t latitude, char ns, uint32_t longitude, char ew,
                     uint16_t pdop, uint16_t hdop, uint16_t vdop, uint16_t epe,
                     void *user_data) {
 	(void)pdop; (void)hdop; (void)vdop; (void)epe;
-	(void)user_data;
+	(void)user_data; // avoid unused parameter warning
 
-	printf("Latitude: %f° %c\n", latitude/1000000.0, ns);
-	printf("Longiutde: %f° %c\n", longitude/1000000.0, ew);
+	printf("Latitude: %f °\n", latitude/1000000.0);
+	printf("N/S: %c\n", ns);
+	printf("Longitude: %f °\n", longitude/1000000.0);
+	printf("E/W: %c\n", ew);
 	printf("\n");
 }
 

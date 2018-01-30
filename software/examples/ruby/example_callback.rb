@@ -19,8 +19,10 @@ ipcon.connect HOST, PORT # Connect to brickd
 # Register coordinates callback
 gps.register_callback(BrickletGPS::CALLBACK_COORDINATES) do |latitude, ns, longitude, ew,
                                                              pdop, hdop, vdop, epe|
-  puts "Latitude: #{latitude/1000000.0}° #{ns}"
-  puts "Longitude: #{longitude/1000000.0}° #{ew}"
+  puts "Latitude: #{latitude/1000000.0} °"
+  puts "N/S: #{ns}"
+  puts "Longitude: #{longitude/1000000.0} °"
+  puts "E/W: #{ew}"
   puts ''
 end
 

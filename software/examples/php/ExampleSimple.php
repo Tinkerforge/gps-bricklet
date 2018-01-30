@@ -19,8 +19,10 @@ $ipcon->connect(HOST, PORT); // Connect to brickd
 // Get current coordinates
 $coordinates = $gps->getCoordinates();
 
-echo "Latitude: " . $coordinates['latitude']/1000000.0 . "° " . $coordinates['ns'] . "\n";
-echo "Longitude: " . $coordinates['longitude']/1000000.0 . "° " . $coordinates['ew'] . "\n";
+echo "Latitude: " . $coordinates['latitude']/1000000.0 . " °\n";
+echo "N/S: " . $coordinates['ns'] . "\n";
+echo "Longitude: " . $coordinates['longitude']/1000000.0 . " °\n";
+echo "E/W: " . $coordinates['ew'] . "\n";
 
 echo "Press key to exit\n";
 fgetc(fopen('php://stdin', 'r'));

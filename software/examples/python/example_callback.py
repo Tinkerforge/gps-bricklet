@@ -10,8 +10,10 @@ from tinkerforge.bricklet_gps import BrickletGPS
 
 # Callback function for coordinates callback
 def cb_coordinates(latitude, ns, longitude, ew, pdop, hdop, vdop, epe):
-    print("Latitude: " + str(latitude/1000000.0) + "° " + ns)
-    print("Longitude: " + str(longitude/1000000.0) + "° " + ew)
+    print("Latitude: " + str(latitude/1000000.0) + " °")
+    print("N/S: " + ns)
+    print("Longitude: " + str(longitude/1000000.0) + " °")
+    print("E/W: " + ew)
     print("")
 
 if __name__ == "__main__":

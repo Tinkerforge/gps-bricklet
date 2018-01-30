@@ -11,8 +11,10 @@ class Example
 	static void CoordinatesCB(BrickletGPS sender, long latitude, char ns, long longitude,
 	                          char ew, int pdop, int hdop, int vdop, int epe)
 	{
-		Console.WriteLine("Latitude: " + latitude/1000000.0 + "° " + ns);
-		Console.WriteLine("Longitude: " + longitude/1000000.0 + "° " + ew);
+		Console.WriteLine("Latitude: " + latitude/1000000.0 + " °");
+		Console.WriteLine("N/S: " + ns);
+		Console.WriteLine("Longitude: " + longitude/1000000.0 + " °");
+		Console.WriteLine("E/W: " + ew);
 		Console.WriteLine("");
 	}
 

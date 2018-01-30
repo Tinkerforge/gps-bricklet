@@ -47,12 +47,15 @@
                         gps.setCoordinatesCallbackPeriod(1000);
                     }
                 );
+
                 // Register coordinates callback
                 gps.on(Tinkerforge.BrickletGPS.CALLBACK_COORDINATES,
                     // Callback function for coordinates callback
                     function (latitude, ns, longitude, ew, pdop, hdop, vdop, epe) {
-                        textArea.value += 'Latitude: ' + latitude/1000000.0 + '° ' + ns + '\n';
-                        textArea.value += 'Longitude: ' + longitude/1000000.0 + '° ' + ew + '\n';
+                        textArea.value += 'Latitude: ' + latitude/1000000.0 + ' °\n';
+                        textArea.value += 'N/S: ' + ns + '\n';
+                        textArea.value += 'Longitude: ' + longitude/1000000.0 + ' °\n';
+                        textArea.value += 'E/W: ' + ew + '\n';
                         textArea.value += '\n';
                         textArea.scrollTop = textArea.scrollHeight;
                     }

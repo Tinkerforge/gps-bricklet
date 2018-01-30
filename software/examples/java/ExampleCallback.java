@@ -21,8 +21,10 @@ public class ExampleCallback {
 		gps.addCoordinatesListener(new BrickletGPS.CoordinatesListener() {
 			public void coordinates(long latitude, char ns, long longitude, char ew,
 			                        int pdop, int hdop, int vdop, int epe) {
-				System.out.println("Latitude: " + latitude/1000000.0 + "° " + ns);
-				System.out.println("Longitude: " + longitude/1000000.0 + "° " + ew);
+				System.out.println("Latitude: " + latitude/1000000.0 + " °");
+				System.out.println("N/S: " + ns);
+				System.out.println("Longitude: " + longitude/1000000.0 + " °");
+				System.out.println("E/W: " + ew);
 				System.out.println("");
 			}
 		});

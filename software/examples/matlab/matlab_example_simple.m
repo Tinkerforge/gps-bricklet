@@ -12,11 +12,13 @@ function matlab_example_simple()
     ipcon.connect(HOST, PORT); % Connect to brickd
     % Don't use device before ipcon is connected
 
-    % Get current coordinates (unit is °/1000000) (unit is °/1000000) (unit is cm)
+    % Get current coordinates
     coordinates = gps.getCoordinates();
 
-    fprintf('Latitude: %g° %s\n', coordinates.latitude/1000000.0, coordinates.ns);
-    fprintf('Longitude: %g° %s\n', coordinates.longitude/1000000.0, coordinates.ew);
+    fprintf('Latitude: %g °\n', coordinates.latitude/1000000.0);
+    fprintf('N/S: %s\n', coordinates.ns);
+    fprintf('Longitude: %g °\n', coordinates.longitude/1000000.0);
+    fprintf('E/W: %s\n', coordinates.ew);
 
     input('Press key to exit\n', 's');
     ipcon.disconnect();

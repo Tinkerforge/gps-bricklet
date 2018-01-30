@@ -16,12 +16,14 @@ class Example
 		// Don't use device before ipcon is connected
 
 		// Get current coordinates
-		long latitude; char ns; long longitude; char ew; int pdop, hdop, vdop, epe;
+		long latitude, longitude; char ns, ew; int pdop, hdop, vdop, epe;
 		gps.GetCoordinates(out latitude, out ns, out longitude, out ew, out pdop,
 		                   out hdop, out vdop, out epe);
 
-		Console.WriteLine("Latitude: " + latitude/1000000.0 + "° " + ns);
-		Console.WriteLine("Longitude: " + longitude/1000000.0 + "° " + ew);
+		Console.WriteLine("Latitude: " + latitude/1000000.0 + " °");
+		Console.WriteLine("N/S: " + ns);
+		Console.WriteLine("Longitude: " + longitude/1000000.0 + " °");
+		Console.WriteLine("E/W: " + ew);
 
 		Console.WriteLine("Press enter to exit");
 		Console.ReadLine();

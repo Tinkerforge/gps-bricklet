@@ -11,8 +11,10 @@ Module ExampleCallback
                       ByVal ns As Char, ByVal longitude As Long, ByVal ew As Char, _
                       ByVal pdop As Integer, ByVal hdop As Integer, _
                       ByVal vdop As Integer, ByVal epe As Integer)
-        Console.WriteLine("Latitude: " + (latitude/1000000.0).ToString() + "° " + ns)
-        Console.WriteLine("Longitude: " + (longitude/1000000.0).ToString() + "° " + ew)
+        Console.WriteLine("Latitude: " + (latitude/1000000.0).ToString() + " °")
+        Console.WriteLine("N/S: " + ns)
+        Console.WriteLine("Longitude: " + (longitude/1000000.0).ToString() + " °")
+        Console.WriteLine("E/W: " + ew)
         Console.WriteLine("")
     End Sub
 

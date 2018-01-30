@@ -20,8 +20,10 @@ Module ExampleSimple
 
         gps.GetCoordinates(latitude, ns, longitude, ew, pdop, hdop, vdop, epe)
 
-        Console.WriteLine("Latitude: " + (latitude/1000000.0).ToString() + "° " + ns)
-        Console.WriteLine("Longitude: " + (longitude/1000000.0).ToString() + "° " + ew)
+        Console.WriteLine("Latitude: " + (latitude/1000000.0).ToString() + " °")
+        Console.WriteLine("N/S: " + ns)
+        Console.WriteLine("Longitude: " + (longitude/1000000.0).ToString() + " °")
+        Console.WriteLine("E/W: " + ew)
 
         Console.WriteLine("Press key to exit")
         Console.ReadLine()

@@ -19,8 +19,10 @@ ipcon.on(Tinkerforge.IPConnection.CALLBACK_CONNECTED,
         // Get current coordinates
         gps.getCoordinates(
             function (latitude, ns, longitude, ew, pdop, hdop, vdop, epe) {
-                console.log('Latitude: ' + latitude/1000000.0 + '° ' + ns);
-                console.log('Longitude: ' + longitude/1000000.0 + '° ' + ew);
+                console.log('Latitude: ' + latitude/1000000.0 + ' °');
+                console.log('N/S: ' + ns);
+                console.log('Longitude: ' + longitude/1000000.0 + ' °');
+                console.log('E/W: ' + ew);
             },
             function (error) {
                 console.log('Error: ' + error);

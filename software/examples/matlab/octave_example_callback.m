@@ -25,8 +25,10 @@ end
 
 % Callback function for coordinates callback
 function cb_coordinates(e)
-    fprintf("Latitude: %g° %s\n", java2int(e.latitude)/1000000.0, e.ns);
-    fprintf("Longitude: %g° %s\n", java2int(e.longitude)/1000000.0, e.ew);
+    fprintf("Latitude: %g °\n", java2int(e.latitude)/1000000.0);
+    fprintf("N/S: %s\n", e.ns);
+    fprintf("Longitude: %g °\n", java2int(e.longitude)/1000000.0);
+    fprintf("E/W: %s\n", e.ew);
     fprintf("\n");
 end
 

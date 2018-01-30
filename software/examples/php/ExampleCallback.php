@@ -13,8 +13,10 @@ const UID = 'XYZ'; // Change XYZ to the UID of your GPS Bricklet
 // Callback function for coordinates callback
 function cb_coordinates($latitude, $ns, $longitude, $ew, $pdop, $hdop, $vdop, $epe)
 {
-    echo "Latitude: " . $latitude/1000000.0 . "° $ns\n";
-    echo "Longitude: " . $longitude/1000000.0 . " ° $ew\n";
+    echo "Latitude: " . $latitude/1000000.0 . " °\n";
+    echo "N/S: $ns\n";
+    echo "Longitude: " . $longitude/1000000.0 . " °\n";
+    echo "E/W: $ew\n";
     echo "\n";
 }
 

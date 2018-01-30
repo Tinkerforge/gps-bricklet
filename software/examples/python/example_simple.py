@@ -18,8 +18,10 @@ if __name__ == "__main__":
     # Get current coordinates
     latitude, ns, longitude, ew, pdop, hdop, vdop, epe = gps.get_coordinates()
 
-    print("Latitude: " + str(latitude/1000000.0) + "° " + ns)
-    print("Longitude: " + str(longitude/1000000.0) + "° " + ew)
+    print("Latitude: " + str(latitude/1000000.0) + " °")
+    print("N/S: " + ns)
+    print("Longitude: " + str(longitude/1000000.0) + " °")
+    print("E/W: " + ew)
 
     raw_input("Press key to exit\n") # Use input() in Python 3
     ipcon.disconnect()

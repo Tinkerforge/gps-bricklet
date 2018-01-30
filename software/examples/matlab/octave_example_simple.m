@@ -14,8 +14,10 @@ function octave_example_simple()
     % Get current coordinates
     coordinates = gps.getCoordinates();
 
-    fprintf("Latitude: %g° %s\n", java2int(coordinates.latitude)/1000000.0, coordinates.ns);
-    fprintf("Longitude: %g° %s\n", java2int(coordinates.longitude)/1000000.0, coordinates.ew);
+    fprintf("Latitude: %g °\n", java2int(coordinates.latitude)/1000000.0);
+    fprintf("N/S: %s\n", coordinates.ns);
+    fprintf("Longitude: %g °\n", java2int(coordinates.longitude)/1000000.0);
+    fprintf("E/W: %s\n", coordinates.ew);
 
     input("Press key to exit\n", "s");
     ipcon.disconnect();
