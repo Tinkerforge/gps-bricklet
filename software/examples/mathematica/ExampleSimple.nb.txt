@@ -10,9 +10,8 @@ ipcon=NETNew["Tinkerforge.IPConnection"]
 gps=NETNew["Tinkerforge.BrickletGPS",uid,ipcon]
 ipcon@Connect[host,port]
 
-latitude=0;ns=0;longitude=0;ew=0;pdop=0;hdop=0;vdop=0;epe=0
-
 (*Get current coordinates*)
+latitude=0;ns=0;longitude=0;ew=0;pdop=0;hdop=0;vdop=0;epe=0
 gps@GetCoordinates[latitude,ns,longitude,ew,pdop,hdop,vdop,epe]
 
 Print["Latitude: "<>ToString[N[Quantity[latitude,"°/1000000"]]]]
