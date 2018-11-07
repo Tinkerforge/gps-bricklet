@@ -1,35 +1,36 @@
 use std::{error::Error, io, thread};
-use tinkerforge::{gps_bricklet::*, ipconnection::IpConnection};
+use tinkerforge::{gps_bricklet::*, ip_connection::IpConnection};
 
-const HOST: &str = "127.0.0.1";
+const HOST: &str = "localhost";
 const PORT: u16 = 4223;
-const UID: &str = "XYZ"; // Change XYZ to the UID of your GPS Bricklet
+const UID: &str = "XYZ"; // Change XYZ to the UID of your GPS Bricklet.
 
 fn main() -> Result<(), Box<dyn Error>> {
-    let ipcon = IpConnection::new(); // Create IP connection
-    let gps_bricklet = GPSBricklet::new(UID, &ipcon); // Create device object
+    let ipcon = IpConnection::new(); // Create IP connection.
+    let gps = GpsBricklet::new(UID, &ipcon); // Create device object.
 
-    ipcon.connect(HOST, PORT).recv()??; // Connect to brickd
-                                        // Don't use device before ipcon is connected
+    ipcon.connect((HOST, PORT)).recv()??; // Connect to brickd.
+                                          // Don't use device before ipcon is connected.
 
-    //Create listener for coordinates events.
-    let coordinates_listener = gps_bricklet.get_coordinates_receiver();
-    // Spawn thread to handle received events. This thread ends when the gps_bricklet
+    // Create receiver for coordinates events.
+    let coordinates_receiver = gps.get_coordinates_receiver();
+
+    // Spawn thread to handle received events. This thread ends when the `gps` object
     // is dropped, so there is no need for manual cleanup.
     thread::spawn(move || {
-        for event in coordinates_listener {
-            println!("Latitude: {}{}", event.latitude as f32 / 1000000.0, " °");
-            println!("N/S: {}", event.ns);
-            println!("Longitude: {}{}", event.longitude as f32 / 1000000.0, " °");
-            println!("E/W: {}", event.ew);
+        for coordinates in coordinates_receiver {
+            println!("Latitude: {} °", coordinates.latitude as f32 / 1000000.0);
+            println!("N/S: {}", coordinates.ns);
+            println!("Longitude: {} °", coordinates.longitude as f32 / 1000000.0);
+            println!("E/W: {}", coordinates.ew);
             println!();
         }
     });
 
-    // Set period for coordinates listener to 1s (1000ms)
+    // Set period for coordinates receiver to 1s (1000ms).
     // Note: The coordinates callback is only called every second
     //       if the coordinates has changed since the last call!
-    gps_bricklet.set_coordinates_callback_period(1000);
+    gps.set_coordinates_callback_period(1000);
 
     println!("Press enter to exit.");
     let mut _input = String::new();
