@@ -19,9 +19,9 @@ func main() {
 	// Don't use device before ipcon is connected.
 
 	gps.RegisterCoordinatesCallback(func(latitude uint32, ns rune, longitude uint32, ew rune, pdop uint16, hdop uint16, vdop uint16, epe uint16) {
-		fmt.Printf("Latitude: %d °\n", float64(latitude)/1000000.0)
+		fmt.Printf("Latitude: %f °\n", float64(latitude)/1000000.0)
 		fmt.Printf("N/S: %c\n", ns)
-		fmt.Printf("Longitude: %d °\n", float64(longitude)/1000000.0)
+		fmt.Printf("Longitude: %f °\n", float64(longitude)/1000000.0)
 		fmt.Printf("E/W: %c\n", ew)
 		fmt.Println()
 	})
