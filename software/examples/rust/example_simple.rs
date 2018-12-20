@@ -14,12 +14,12 @@ fn main() -> Result<(), Box<dyn Error>> {
                                           // Don't use device before ipcon is connected.
 
     // Get current coordinates.
-    let get_coordinates_result = gps.get_coordinates().recv()?;
+    let coordinates = gps.get_coordinates().recv()?;
 
-    println!("Latitude: {} °", get_coordinates_result.latitude as f32 / 1000000.0);
-    println!("N/S: {}", get_coordinates_result.ns);
-    println!("Longitude: {} °", get_coordinates_result.longitude as f32 / 1000000.0);
-    println!("E/W: {}", get_coordinates_result.ew);
+    println!("Latitude: {} °", coordinates.latitude as f32 / 1000000.0);
+    println!("N/S: {}", coordinates.ns);
+    println!("Longitude: {} °", coordinates.longitude as f32 / 1000000.0);
+    println!("E/W: {}", coordinates.ew);
 
     println!("Press enter to exit.");
     let mut _input = String::new();
