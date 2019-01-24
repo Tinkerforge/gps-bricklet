@@ -4,6 +4,7 @@ setup:
 	# Handle incoming coordinates callbacks
 	subscribe to tinkerforge/callback/gps_bricklet/XYZ/coordinates
 	publish '{"register": true}' to tinkerforge/register/gps_bricklet/XYZ/coordinates # Register coordinates callback
+	
 	# Set period for coordinates callback to 1s (1000ms)
 	# Note: The coordinates callback is only called every second
 	#       if the coordinates has changed since the last call!
