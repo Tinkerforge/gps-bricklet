@@ -3,4 +3,4 @@
 setup:
 	# Get current coordinates
 	subscribe to tinkerforge/response/gps_bricklet/XYZ/get_coordinates
-	publish '' to tinkerforge/request/gps_bricklet/XYZ/get_coordinates 
+	publish '' to tinkerforge/request/gps_bricklet/XYZ/get_coordinates
