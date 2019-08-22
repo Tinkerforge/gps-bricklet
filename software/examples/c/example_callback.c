@@ -40,7 +40,7 @@ int main(void) {
 	// Register coordinates callback to function cb_coordinates
 	gps_register_callback(&gps,
 	                      GPS_CALLBACK_COORDINATES,
-	                      (void *)cb_coordinates,
+	                      (void (*)(void))cb_coordinates,
 	                      NULL);
 
 	// Set period for coordinates callback to 1s (1000ms)
