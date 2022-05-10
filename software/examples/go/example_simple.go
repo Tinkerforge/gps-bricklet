@@ -22,9 +22,9 @@ func main() {
 	latitude, ns, longitude, ew, _, _, _, _, _ := gps.GetCoordinates()
 
 	fmt.Printf("Latitude: %f °\n", float64(latitude)/1000000.0)
-	fmt.Printf("N/S: \n", ns)
+	fmt.Printf("N/S: %c\n", ns)
 	fmt.Printf("Longitude: %f °\n", float64(longitude)/1000000.0)
-	fmt.Printf("E/W: \n", ew)
+	fmt.Printf("E/W: %c\n", ew)
 
 	fmt.Print("Press enter to exit.")
 	fmt.Scanln()
